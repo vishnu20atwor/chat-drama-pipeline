@@ -68,7 +68,16 @@ def speak_kokoro(text, cfg, out_path):
 async def speak(text, cfg, out_path):
     if cfg.get("engine", "edge") == "kokoro":
         return speak_kokoro(text, cfg, out_path)
-    return await speak_edge(text, cfg, out_path)
+    # edge-tts occasionally returns no audio for a perfectly good line — a
+    # network hiccup, not the text. Three tries before an unattended run dies.
+    for attempt in range(3):
+        try:
+            return await speak_edge(text, cfg, out_path)
+        except edge_tts.exceptions.NoAudioReceived:
+            if attempt == 2:
+                raise
+            print(f"  retrying ({attempt + 1}/3): {text[:40]}")
+            await asyncio.sleep(2)
 
 
 async def main(content_path):

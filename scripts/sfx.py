@@ -67,6 +67,26 @@ def boom():
     return out
 
 
+def riser():
+    # 2.2s of tension: filtered noise swelling in, plus a tone climbing an
+    # octave. Ends exactly where the boom starts.
+    out = []
+    n = int(RATE * 2.2)
+    rnd = random.Random(3)
+    ph = 0.0
+    lp = 0.0
+    for i in range(n):
+        t = i / RATE
+        p = t / 2.2
+        f = 110 * (2 ** p)
+        ph += 2 * math.pi * f / RATE
+        # one-pole lowpass on noise, opening up as it rises
+        lp += (rnd.random() * 2 - 1 - lp) * (0.02 + 0.3 * p)
+        env = p ** 2.2
+        out.append((0.55 * lp + 0.25 * math.sin(ph)) * env)
+    return out
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise SystemExit(__doc__)
@@ -75,3 +95,4 @@ if __name__ == "__main__":
     write(os.path.join(d, "pop.wav"), pop())
     write(os.path.join(d, "send.wav"), send())
     write(os.path.join(d, "boom.wav"), boom())
+    write(os.path.join(d, "riser.wav"), riser())

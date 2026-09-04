@@ -1,7 +1,7 @@
 // One command per video:  npm run build -- 2026-09-06
 // Sheet → lint → voices → sounds → render → cover → copy. Writes out/<id>.*
 import {execSync} from 'node:child_process';
-import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {fetchPhotos} from './lib/photo.mjs';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -23,7 +23,7 @@ const content = JSON.parse(readFileSync(`content/${id}.json`, 'utf8'));
 const channel = JSON.parse(readFileSync('content/channel.json', 'utf8'));
 
 // Generated once, reused forever (gitignored, so CI makes them on every run — ~10s).
-if (!existsSync('public/sfx/boom.wav')) run('python', ['scripts/sfx.py', 'public/sfx']);
+if (!existsSync('public/sfx/riser.wav')) run('python', ['scripts/sfx.py', 'public/sfx']);
 if (!existsSync('public/music/bed.wav')) {
   mkdirSync('public/music', {recursive: true});
   run('python', ['scripts/bed.py', 'public/music/bed.wav']);
@@ -45,7 +45,14 @@ mkdirSync('out', {recursive: true});
 writeFileSync(`out/${id}.props.json`, JSON.stringify({content, audio}));
 
 console.log(`\nrendering ${id}  (${seconds.toFixed(1)}s)`);
-run('npx', ['remotion', 'render', 'src/index.jsx', 'Chat', `out/${id}.mp4`, `--props=out/${id}.props.json`, '--log=error']);
+run('npx', ['remotion', 'render', 'src/index.jsx', 'Chat', `out/${id}.raw.mp4`, `--props=out/${id}.props.json`, '--log=error']);
+
+// Loudness. Every edge-tts voice comes out at its own level, and a Short that
+// plays quieter than the one before it gets swiped. Normalise the mix to the
+// -14 LUFS platforms target, video stream copied. Remotion ships ffmpeg.
+console.log('normalising loudness');
+run('npx', ['remotion', 'ffmpeg', '-y', '-i', `out/${id}.raw.mp4`, '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', `out/${id}.mp4`]);
+rmSync(`out/${id}.raw.mp4`);
 
 // Cover: the hook bubble, settled, all words lit.
 const hook = tl.items.find((it) => it.kind === 'msg');
