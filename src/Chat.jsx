@@ -17,7 +17,7 @@ const HEADER_H = 128;
 const HEADLINE_Y = HEADER_Y + HEADER_H;
 const HEADLINE_H = 200;
 const PROGRESS_H = 8;
-const CHAT_Y = HEADLINE_Y + HEADLINE_H + PROGRESS_H + 6;
+const CHAT_Y = HEADLINE_Y + HEADLINE_H + 8;
 const INPUT_H = 84;
 const INPUT_Y = SAFE_BOTTOM - INPUT_H;
 const CHAT_H = INPUT_Y - CHAT_Y - 12;
@@ -128,8 +128,8 @@ const Headline = ({skin, title, frame}) => {
 // A thin bar under the headline that fills over the video. "It's short, stay"
 // — the cheapest completion-rate lever there is.
 const Progress = ({skin, frame, total}) => (
-  <div style={{position: 'absolute', top: HEADLINE_Y + HEADLINE_H, left: PAD_X, width: W - PAD_X * 2, height: PROGRESS_H, borderRadius: 4, background: skin.line}}>
-    <div style={{width: `${Math.min(100, (100 * frame) / total)}%`, height: '100%', borderRadius: 4, background: skin.headlineBg}} />
+  <div style={{position: 'absolute', top: 0, left: 0, width: W, height: PROGRESS_H, background: skin.line}}>
+    <div style={{width: `${Math.min(100, (100 * frame) / total)}%`, height: '100%', background: skin.headlineBg}} />
   </div>
 );
 
