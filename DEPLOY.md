@@ -31,22 +31,21 @@ https://www.googleapis.com/auth/youtube.upload      uploads the video
 https://www.googleapis.com/auth/youtube.force-ssl   posts the comment
 ```
 
-Then run the consent flow once on your machine to get a refresh token. The
-quickest way with nothing installed:
+**Publish the consent screen** (OAuth consent screen → *Publish app* → confirm).
+While it sits in "Testing", Google expires every refresh token after 7 days,
+and the cron would die silently in week two. "In production" with an
+unverified app just shows you a warning page once; the token then lasts.
+
+Then run the consent flow once on your machine:
 
 ```bash
-node -e "const {randomBytes}=require('crypto');const id=process.argv[1];console.log('https://accounts.google.com/o/oauth2/v2/auth?client_id='+id+'&redirect_uri=http://localhost:8765&response_type=code&access_type=offline&prompt=consent&scope='+encodeURIComponent('https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl'))" YOUR_CLIENT_ID
+node scripts/token.mjs
 ```
 
-Open the printed URL, approve, and copy the `code=` value from the redirect
-URL in the address bar. Exchange it:
-
-```bash
-curl -s -X POST https://oauth2.googleapis.com/token -d client_id=YOUR_CLIENT_ID -d client_secret=YOUR_CLIENT_SECRET -d code=PASTE_CODE -d grant_type=authorization_code -d redirect_uri=http://localhost:8765
-```
-
-The JSON that comes back has `refresh_token`. That, plus the client id and
-secret, are the three YouTube secrets.
+It asks for the client id and secret, opens the consent page (sign in as the
+channel's account, click *Advanced → Go to … (unsafe)* on the unverified-app
+warning, allow both boxes), and prints the refresh token with the channel
+name it belongs to. Those three values are the YouTube secrets.
 
 ## 3. Secrets
 
