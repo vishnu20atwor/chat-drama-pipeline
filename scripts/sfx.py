@@ -87,6 +87,22 @@ def riser():
     return out
 
 
+def shutter():
+    # a phone camera click: two short noise bursts 60ms apart, the second softer
+    out = []
+    n = int(RATE * 0.16)
+    rnd = random.Random(11)
+    for i in range(n):
+        t = i / RATE
+        v = 0.0
+        for at, amp in ((0.0, 0.9), (0.06, 0.5)):
+            p = t - at
+            if 0 <= p < 0.03:
+                v += (rnd.random() * 2 - 1) * amp * math.exp(-p * 180)
+        out.append(v)
+    return out
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise SystemExit(__doc__)
@@ -96,3 +112,4 @@ if __name__ == "__main__":
     write(os.path.join(d, "send.wav"), send())
     write(os.path.join(d, "boom.wav"), boom())
     write(os.path.join(d, "riser.wav"), riser())
+    write(os.path.join(d, "shutter.wav"), shutter())

@@ -32,8 +32,8 @@ const RADIUS = 38;
 const GAP = 12; // between bubbles of the same sender
 const RUN_GAP = 26; // when the sender changes
 const NAME_H = 40; // sender name above a bubble, group chats only
-const PHOTO_W = 600;
-const PHOTO_H = 440;
+const PHOTO_W = 720; // a phone photo takes most of the width, like a real thread
+const PHOTO_H = 520;
 const TYPING_H = 76;
 const TIME_H = 64;
 const SEEN_H = 36;
@@ -171,7 +171,7 @@ const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
       {showName && <div style={{color: nameColor(item.who, names), fontFamily: FONT, fontSize: 30, fontWeight: 700, height: NAME_H, lineHeight: `${NAME_H}px`, paddingLeft: 18}}>{item.who}</div>}
       <div style={{position: 'relative'}}>
         {item.photo ? (
-          <div style={{width: PHOTO_W, height: PHOTO_H, borderRadius: RADIUS, overflow: 'hidden', background: skin.inBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90}}>
+          <div style={{width: PHOTO_W, height: PHOTO_H, borderRadius: RADIUS, overflow: 'hidden', background: skin.inBg, border: `3px solid ${skin.line}`, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90}}>
             {photoFile ? <Img src={staticFile(photoFile)} style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : <span>📷</span>}
           </div>
         ) : (
@@ -344,7 +344,7 @@ export const Chat = ({content, audio}) => {
             .map((it) => (
               <React.Fragment key={it.i}>
                 <Sequence from={it.from} durationInFrames={20}>
-                  <Audio src={staticFile(`sfx/${it.side === 'in' ? 'pop' : 'send'}.wav`)} volume={0.7} />
+                  <Audio src={staticFile(`sfx/${it.photo ? 'shutter' : it.side === 'in' ? 'pop' : 'send'}.wav`)} volume={0.7} />
                 </Sequence>
                 {it.boom && (
                   <>
