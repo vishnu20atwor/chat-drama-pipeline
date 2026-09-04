@@ -1,0 +1,24 @@
+{
+  "name": "chat-drama-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chat-bubble drama Shorts: multi-voice text-message stories, rendered and uploaded unattended",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.jsx",
+    "sheet": "node scripts/sheet.mjs",
+    "build": "node scripts/build.mjs",
+    "lint": "node scripts/lint.mjs",
+    "refill": "node scripts/refill.mjs",
+    "frames": "node scripts/frames.mjs",
+    "upload": "node scripts/upload.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/google-fonts": "^4.0.0",
+    "@remotion/layout-utils": "^4.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "^4.0.0"
+  }
+}

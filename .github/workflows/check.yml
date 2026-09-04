@@ -1,0 +1,19 @@
+name: lint the sheet
+
+# A bad refill fails here, on push — not at 8 PM on a runner nobody is watching.
+on:
+  push:
+    paths: ['sheet/**', 'scripts/**', 'content/voices.json']
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/lint.mjs --self
+      - run: node scripts/lint.mjs

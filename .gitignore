@@ -1,0 +1,10 @@
+node_modules/
+out/
+# generated on every run, in CI too
+public/vo/
+public/sfx/
+public/music/
+public/photos/
+content/*.audio.json
+content/20*.json
+.env

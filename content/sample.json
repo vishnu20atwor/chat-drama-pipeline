@@ -1,0 +1,165 @@
+{
+  "id": "2026-09-06",
+  "title": "Mom found a $400 jewelry receipt in my jacket 💍",
+  "series": "Texts From Mom",
+  "pov": "Me",
+  "contact": "Mom",
+  "skin": "light",
+  "cta": "Would you have cried? 😭",
+  "ctaSay": "Would you have cried?",
+  "description": "She found a $400 receipt in my jacket. She thought she knew what it was. She didn't.",
+  "hashtags": [
+    "#textstory",
+    "#momtexts",
+    "#chatstory",
+    "#wholesome",
+    "#storytime"
+  ],
+  "pinned": "What would YOU have said at the red light? 👇",
+  "events": [
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "I found a receipt in your jacket.",
+      "say": "I found a receipt in your jacket."
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "which jacket",
+      "say": "which jacket"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "The one you wore Friday. $400 at a jewelry store.",
+      "say": "The one you wore Friday. $400 at a jewelry store."
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "mom i can explain",
+      "say": "mom i can explain"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "You are SEVENTEEN.",
+      "say": "You are SEVENTEEN."
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "it's not what you think",
+      "say": "it's not what you think"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "typingMs": 3000,
+      "text": "Then what is it. Exactly.",
+      "say": "Then what is it. Exactly."
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "can we talk when you get home",
+      "say": "can we talk when you get home"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "No. Now.",
+      "say": "No. Now."
+    },
+    {
+      "kind": "seen"
+    },
+    {
+      "kind": "pause",
+      "ms": 2000
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "it's for you",
+      "say": "it's for you"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "What?",
+      "say": "What?"
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "dad told me you pawned your ring last year to pay for my braces",
+      "say": "dad told me you pawned your ring last year to pay for my braces"
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "i've been washing cars every weekend since march",
+      "say": "i've been washing cars every weekend since march"
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "boom": true,
+      "photo": "gold ring in a box"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "text": "I am at a red light crying",
+      "say": "I am at a red light crying"
+    },
+    {
+      "kind": "msg",
+      "who": "Me",
+      "side": "out",
+      "text": "it's not the same ring. i couldn't find that one",
+      "say": "it's not the same ring. i couldn't find that one"
+    },
+    {
+      "kind": "msg",
+      "who": "Mom",
+      "side": "in",
+      "typingMs": 3000,
+      "text": "It's better. Come outside. I'm already home.",
+      "say": "It's better. Come outside. I'm already home.",
+      "react": "❤️"
+    }
+  ],
+  "cast": {
+    "Mom": {
+      "voice": "en-US-JennyNeural",
+      "rate": "+4%",
+      "pitch": "+0Hz",
+      "emoji": "👩"
+    },
+    "Me": {
+      "voice": "en-US-AvaMultilingualNeural",
+      "rate": "+8%",
+      "pitch": "+0Hz",
+      "emoji": "🙂",
+      "pool": false
+    }
+  }
+}
