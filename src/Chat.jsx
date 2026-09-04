@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {AbsoluteFill, Audio, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {loadFont} from '@remotion/google-fonts/Inter';
 import {measureText} from '@remotion/layout-utils';
-import {FPS, H, SAFE_BOTTOM, SKINS, W, clockOf, pickSkin} from './theme.js';
+import {FPS, H, SAFE_BOTTOM, SKINS, W, clockOf, hashOf, pickSkin} from './theme.js';
 import {timeline} from './timeline.js';
 
 const {fontFamily} = loadFont('normal', {weights: ['400', '500', '600', '700', '800'], subsets: ['latin']});
@@ -30,7 +30,11 @@ const LINE_H = 60;
 const RADIUS = 38;
 const GAP = 12; // between bubbles of the same sender
 const RUN_GAP = 26; // when the sender changes
-const NAME_H = 34; // sender name above a bubble, group chats only
+const NAME_H = 40; // sender name above a bubble, group chats only
+// One colour per sender, like WhatsApp groups: the joke in a group chat is
+// who said it, and grey names at 30px don't carry that on a phone.
+const NAME_COLORS = ['#FF7A7A', '#5AC8FA', '#FFD60A', '#BF5AF2', '#30D158', '#FF9F0A', '#64D2FF', '#FF6482'];
+const nameColor = (name, order) => NAME_COLORS[(order.indexOf(name) + hashOf(order[0] || '') % 3) % NAME_COLORS.length];
 const PHOTO_W = 600;
 const PHOTO_H = 440;
 const TYPING_H = 76;
@@ -142,7 +146,7 @@ const Words = ({text, item, frame, color, cover}) => {
   ));
 };
 
-const Bubble = ({item, skin, frame, showName, cover, photoFile}) => {
+const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
   const {fps} = useVideoConfig();
   const out = item.side === 'out';
   const s = spring({frame: frame - item.from, fps, config: {damping: 15, stiffness: 190, mass: 0.7}});
@@ -150,7 +154,7 @@ const Bubble = ({item, skin, frame, showName, cover, photoFile}) => {
   const rs = item.react ? spring({frame: frame - reactAt, fps, config: {damping: 10, stiffness: 220}}) : 0;
   return (
     <div style={{display: 'flex', flexDirection: 'column', alignItems: out ? 'flex-end' : 'flex-start', transformOrigin: out ? 'right bottom' : 'left bottom', transform: `scale(${0.7 + 0.3 * s}) translateY(${(1 - s) * 26}px)`, opacity: Math.min(1, s * 1.4)}}>
-      {showName && <div style={{color: skin.sub, fontFamily: FONT, fontSize: 26, fontWeight: 600, height: NAME_H, paddingLeft: 18}}>{item.who}</div>}
+      {showName && <div style={{color: nameColor(item.who, names), fontFamily: FONT, fontSize: 30, fontWeight: 700, height: NAME_H, lineHeight: `${NAME_H}px`, paddingLeft: 18}}>{item.who}</div>}
       <div style={{position: 'relative'}}>
         {item.photo ? (
           <div style={{width: PHOTO_W, height: PHOTO_H, borderRadius: RADIUS, overflow: 'hidden', background: skin.inBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90}}>
@@ -253,7 +257,7 @@ export const Chat = ({content, audio}) => {
             {rows.map((r, k) => (
               <div key={k} style={{marginTop: r.gap, height: r.kind === 'typing' ? r.h : undefined, overflow: r.kind === 'typing' ? 'hidden' : undefined}}>
                 {r.kind === 'typing' && <Typing skin={skin} frame={frame} />}
-                {r.kind === 'msg' && <Bubble item={r.item} skin={skin} frame={frame} showName={r.showName} cover={content.cover} photoFile={r.item.photoFile} />}
+                {r.kind === 'msg' && <Bubble item={r.item} skin={skin} frame={frame} showName={r.showName} cover={content.cover} photoFile={r.item.photoFile} names={[...inSpeakers]} />}
                 {r.kind === 'time' && <div style={{height: TIME_H, display: 'flex', alignItems: 'center', justifyContent: 'center', color: skin.sub, fontSize: 26, fontWeight: 600}}>{r.item.text}</div>}
                 {r.kind === 'seen' && <div style={{height: SEEN_H, textAlign: 'right', color: skin.sub, fontSize: 24, fontWeight: 600, paddingRight: 8}}>Read</div>}
               </div>
@@ -282,7 +286,7 @@ export const Chat = ({content, audio}) => {
       {flash > 0 && <AbsoluteFill style={{background: '#fff', opacity: flash}} />}
 
       {cta && !content.cover && (
-        <AbsoluteFill style={{background: `rgba(0,0,0,${0.6 * Math.min(1, ctaS * 1.5)})`, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <AbsoluteFill style={{background: `rgba(0,0,0,${0.78 * Math.min(1, ctaS * 1.5)})`, backdropFilter: `blur(${16 * Math.min(1, ctaS * 1.5)}px)`, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <div style={{transform: `scale(${0.8 + 0.2 * ctaS})`, opacity: ctaS, textAlign: 'center', padding: '0 80px', marginBottom: 300}}>
             <div style={{color: '#fff', fontSize: 72, fontWeight: 800, lineHeight: 1.15, textShadow: '0 8px 30px rgba(0,0,0,0.6)'}}>{content.cta}</div>
             <div style={{color: '#fff', opacity: 0.8, fontSize: 32, fontWeight: 600, marginTop: 28}}>new story every day</div>
