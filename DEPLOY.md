@@ -36,16 +36,23 @@ While it sits in "Testing", Google expires every refresh token after 7 days,
 and the cron would die silently in week two. "In production" with an
 unverified app just shows you a warning page once; the token then lasts.
 
-Then run the consent flow once on your machine:
+Then get the refresh token **in the browser, nothing installed**, with
+Google's OAuth Playground:
 
-```bash
-node scripts/token.mjs
-```
+1. Credentials → Create credentials → OAuth client ID → type **Web application**.
+   Under *Authorized redirect URIs* add exactly
+   `https://developers.google.com/oauthplayground`. Create; keep the id and secret.
+2. Open [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground).
+   Gear icon (top right) → tick **Use your own OAuth credentials** → paste the
+   client id and secret → Close.
+3. Step 1 box on the left: paste both scopes into the "Input your own scopes"
+   field, space-separated, then **Authorize APIs**. Sign in as the channel's
+   account, click *Advanced → Go to … (unsafe)* on the warning, allow both.
+4. Step 2 box: **Exchange authorization code for tokens**. The right pane
+   shows a JSON with `refresh_token`. That, plus the client id and secret,
+   are the three YouTube secrets. Copy them straight into GitHub Secrets.
 
-It asks for the client id and secret, opens the consent page (sign in as the
-channel's account, click *Advanced → Go to … (unsafe)* on the unverified-app
-warning, allow both boxes), and prints the refresh token with the channel
-name it belongs to. Those three values are the YouTube secrets.
+(`node scripts/token.mjs` does the same from a terminal, if you'd rather.)
 
 ## 3. Secrets
 
