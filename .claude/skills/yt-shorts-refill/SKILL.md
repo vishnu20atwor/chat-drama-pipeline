@@ -97,11 +97,12 @@ channel wins on **rewatches, comments and follows**, not on polish.
 ## Cadence
 
 The operator refills roughly every 2 months, prompted by a recurring calendar
-reminder set two weeks before the sheet runs dry. Two things to know:
+reminder set two weeks before the sheet runs dry.
 
-- **60 days of repository inactivity disables the cron.** GitHub emails first,
-  then switches scheduled workflows off. A refill push resets that clock — so
-  refilling on time is also what keeps the schedule alive. If a refill slips
-  past ~8 weeks, check Actions for a disabled-workflow banner and re-enable it.
-- Always leave **at least 3 weeks of runway** after a refill. A sheet that ends
-  on the day of the next reminder has no slack for a missed week.
+- Always leave **at least 3 weeks of runway** after a refill. A sheet ending on
+  the day of the next reminder has no slack for a missed week.
+- While refilling, glance at Actions for a disabled-workflow banner and at
+  Settings → Billing for the Actions minutes and artifact storage. The repo is
+  private, so both come out of the free monthly quota: the daily job burns
+  roughly 240 of 2,000 minutes a month, and 14 days of retained videos sit in
+  500 MB of free storage. Storage is the one that creeps.
