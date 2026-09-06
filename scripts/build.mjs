@@ -3,6 +3,7 @@
 import {execSync} from 'node:child_process';
 import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {fetchPhotos} from './lib/photo.mjs';
+import {hashOf} from '../src/theme.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
@@ -34,6 +35,34 @@ run('python', ['scripts/tts.py', `content/${id}.json`]);
 const audio = JSON.parse(readFileSync(`content/${id}.audio.json`, 'utf8'));
 
 await fetchPhotos(content); // adds event.photoFile where PIXABAY_KEY allows
+
+// Gameplay under the thread. The clip is large and licensed to the operator, so
+// it lives outside the repo; CI fetches it once from BG_URL. Each day starts at
+// a different second of the loop, so the same scenery never runs twice in a row.
+// No clip means no gameplay and a full-frame thread — never a failed render.
+const BG = 'public/bg/loop.mp4';
+if (!existsSync(BG) && process.env.BG_URL) {
+  mkdirSync('public/bg', {recursive: true});
+  console.log('fetching the gameplay loop');
+  try {
+    const res = await fetch(process.env.BG_URL);
+    if (res.ok) writeFileSync(BG, Buffer.from(await res.arrayBuffer()));
+    else console.warn(`  ⚠ BG_URL -> HTTP ${res.status}; rendering without gameplay`);
+  } catch (e) {
+    console.warn(`  ⚠ BG_URL failed: ${e.message}; rendering without gameplay`);
+  }
+}
+if (existsSync(BG)) {
+  const probe = execSync(`npx remotion ffprobe ${BG}`, {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']});
+  const m = probe.match(/Duration: (\d+):(\d+):(\d+)/);
+  const secs = m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : 0;
+  const room = Math.max(1, secs - MAX_S - 5); // never run off the end of the clip
+  const startSec = hashOf(id + 'bg') % room;
+  content.bg = {file: 'bg/loop.mp4', startFrom: startSec * 30};
+  console.log(`gameplay: ${secs}s clip, window from ${startSec}s`);
+} else {
+  console.log('no gameplay clip (public/bg/loop.mp4) — full-frame thread');
+}
 
 const {timeline} = await import('../src/timeline.js');
 const tl = timeline(content, audio);

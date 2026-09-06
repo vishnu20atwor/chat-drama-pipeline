@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, Audio, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {loadFont} from '@remotion/google-fonts/Inter';
 import {measureText} from '@remotion/layout-utils';
 import {FPS, H, SAFE_BOTTOM, SKINS, W, clockOf, hashOf, pickSkin} from './theme.js';
@@ -14,13 +14,14 @@ const FONT = `${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color 
 const STATUS_H = 64;
 const HEADER_Y = STATUS_H;
 const HEADER_H = 128;
-const HEADLINE_Y = HEADER_Y + HEADER_H;
-const HEADLINE_H = 200;
 const PROGRESS_H = 8;
-const CHAT_Y = HEADLINE_Y + HEADLINE_H + 8;
+// The gameplay band. The thread sits above it; this is the half of the screen
+// that used to be empty black. With no background clip the band is 0 and the
+// thread takes the whole frame, so a missing asset costs nothing.
+const GAMEPLAY_H = 700;
+const CHAT_Y = HEADER_Y + HEADER_H + 8;
 const INPUT_H = 84;
-const INPUT_Y = SAFE_BOTTOM - INPUT_H;
-const CHAT_H = INPUT_Y - CHAT_Y - 12;
+const CARD_R = 44; // the screenshot's rounded bottom corners
 
 const PAD_X = 32;
 const BUBBLE_MAX = 830; // px, ≈77% of the width — a touch wider than a real phone, for legibility at Shorts size
@@ -109,22 +110,6 @@ const Header = ({skin, content, group}) => {
   );
 };
 
-// The thumbnail text: the title, big, in a bright block. Fully readable at
-// frame 0 — the feed's first frame is the thumbnail, and a fade-in would
-// hand YouTube a black card.
-const Headline = ({skin, title, frame}) => {
-  const {fps} = useVideoConfig();
-  const s = spring({frame, fps, config: {damping: 14, stiffness: 170, mass: 0.7}});
-  const px = title.length > 60 ? 48 : title.length > 40 ? 54 : 62;
-  return (
-    <div style={{position: 'absolute', top: HEADLINE_Y, left: 0, width: W, height: HEADLINE_H, display: 'flex', alignItems: 'center', padding: `0 ${PAD_X}px`}}>
-      <div style={{background: skin.headlineBg, color: skin.headline, fontFamily: FONT, fontWeight: 800, fontSize: px, lineHeight: 1.12, padding: '18px 26px', borderRadius: 22, transform: `scale(${1.07 - 0.07 * s}) rotate(-1deg)`, maxWidth: W - PAD_X * 2, boxShadow: '0 12px 40px rgba(0,0,0,0.25)'}}>
-        {title}
-      </div>
-    </div>
-  );
-};
-
 // A thin bar under the headline that fills over the video. "It's short, stay"
 // — the cheapest completion-rate lever there is.
 const Progress = ({skin, frame, total}) => (
@@ -132,6 +117,16 @@ const Progress = ({skin, frame, total}) => (
     <div style={{width: `${Math.min(100, (100 * frame) / total)}%`, height: '100%', background: skin.headlineBg}} />
   </div>
 );
+
+// Licensed gameplay under the thread. objectFit crops a 16:9 clip into the
+// band, and startFrom walks a different window of the loop each day so the
+// same thirty seconds never run twice in a row.
+const Gameplay = ({bg}) =>
+  bg ? (
+    <AbsoluteFill>
+      <OffthreadVideo src={staticFile(bg.file)} startFrom={bg.startFrom} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+    </AbsoluteFill>
+  ) : null;
 
 const Typing = ({skin, frame}) => (
   <div style={{display: 'flex', alignItems: 'center', gap: 10, background: skin.inBg, borderRadius: RADIUS, height: TYPING_H, padding: `0 ${BUBBLE_PAD_X}px`, width: 130}}>
@@ -219,7 +214,12 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
   // Bottom-anchored, like every real messaging app: the newest bubble sits just
   // above the input bar and the thread grows upward. Clamping this at 0 was why
   // the opening seconds were 60% empty black.
-  const offset = total - CHAT_H;
+  // With gameplay behind, the screenshot stops short and the clip fills the rest.
+  // With no clip the thread takes the whole frame, so a missing asset costs nothing.
+  const phoneH = content.bg ? H - GAMEPLAY_H : SAFE_BOTTOM;
+  const inputY = phoneH - INPUT_H - 26;
+  const chatH = inputY - CHAT_Y - 12;
+  const offset = total - chatH;
 
   // The twist beat: punch-in, a flash, and a shake on a [boom] bubble.
   const boom = tl.items.find((it) => it.boom && frame >= it.from && frame < it.from + 10);
@@ -233,17 +233,19 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
   const ctaS = cta ? spring({frame: frame - tl.ctaFrom, fps, config: {damping: 14, stiffness: 150}}) : 0;
 
   return (
-    <AbsoluteFill style={{background: skin.bg, fontFamily: FONT}}>
-      {skin.pattern && (
-        <AbsoluteFill style={{opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20px 20px, #fff 2px, transparent 3px)', backgroundSize: '80px 80px'}} />
-      )}
+    <AbsoluteFill style={{background: '#000', fontFamily: FONT}}>
+      <Gameplay bg={content.bg} />
       <AbsoluteFill style={{transform: `translate(${shakeX}px, ${shakeY}px) scale(${punch})`, transformOrigin: '50% 45%'}}>
+        {/* the screenshot: the whole phone, clipped, sitting over the gameplay */}
+        <div style={{position: 'absolute', top: 0, left: 0, width: W, height: phoneH, overflow: 'hidden', background: skin.bg, borderBottomLeftRadius: content.bg ? CARD_R : 0, borderBottomRightRadius: content.bg ? CARD_R : 0, boxShadow: content.bg ? '0 18px 50px rgba(0,0,0,0.55)' : 'none'}}>
+        {skin.pattern && (
+          <AbsoluteFill style={{opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20px 20px, #fff 2px, transparent 3px)', backgroundSize: '80px 80px'}} />
+        )}
         <StatusBar skin={skin} clock={clock} />
         <Header skin={skin} content={content} group={group} />
-        <Headline skin={skin} title={content.title} frame={frame} />
         <Progress skin={skin} frame={frame} total={tl.ctaFrom} />
 
-        <div style={{position: 'absolute', top: CHAT_Y, left: 0, width: W, height: CHAT_H, overflow: 'hidden'}}>
+        <div style={{position: 'absolute', top: CHAT_Y, left: 0, width: W, height: chatH, overflow: 'hidden'}}>
           <div style={{position: 'absolute', left: PAD_X, right: PAD_X, top: 0, transform: `translateY(${-offset}px)`}}>
             {rows.map((r, k) => (
               <div key={k} style={{marginTop: r.gap * (r.p ?? 1), height: r.kind === 'typing' ? r.h : r.p !== undefined && r.p < 1 ? r.h * r.p : undefined, overflow: r.kind === 'typing' || (r.p !== undefined && r.p < 1) ? 'hidden' : 'visible'}}>
@@ -254,11 +256,11 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
               </div>
             ))}
           </div>
-          {/* older bubbles fade out under the headline instead of being guillotined */}
+          {/* older bubbles fade out at the top instead of being guillotined */}
           <div style={{position: 'absolute', top: 0, left: 0, right: 0, height: 90, background: `linear-gradient(${skin.bg}, ${skin.bg}00)`}} />
         </div>
 
-        <div style={{position: 'absolute', top: INPUT_Y, left: 0, width: W, height: INPUT_H, display: 'flex', alignItems: 'center', padding: `0 ${PAD_X}px`, gap: 18}}>
+        <div style={{position: 'absolute', top: inputY, left: 0, width: W, height: INPUT_H, display: 'flex', alignItems: 'center', padding: `0 ${PAD_X}px`, gap: 18}}>
           <span style={{color: skin.sub, fontSize: 40}}>＋</span>
           <div style={{flex: 1, height: 64, borderRadius: 32, background: skin.input, border: `2px solid ${skin.line}`, display: 'flex', alignItems: 'center', padding: '0 26px', color: skin.sub, fontSize: 30}}>
             {skin.pattern ? 'Message' : 'iMessage'}
@@ -266,8 +268,10 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
           <span style={{color: skin.sub, fontSize: 36}}>🎤</span>
         </div>
 
+        </div>
+
         {content.series ? (
-          <div style={{position: 'absolute', top: SAFE_BOTTOM + 30, width: W, textAlign: 'center', color: skin.sub, fontSize: 28, fontWeight: 600, opacity: 0.8}}>
+          <div style={{position: 'absolute', top: phoneH + 26, width: W, textAlign: 'center', color: '#fff', fontSize: 30, fontWeight: 700, textShadow: '0 3px 12px rgba(0,0,0,0.9)'}}>
             {content.series}
             {content.part ? ` · Part ${content.part}` : ''}
           </div>
@@ -331,7 +335,7 @@ export const Chat = ({content, audio}) => {
             .map((it) => (
               <React.Fragment key={it.i}>
                 <Sequence from={it.from} durationInFrames={20}>
-                  <Audio src={staticFile(`sfx/${it.photo ? 'shutter' : it.side === 'in' ? 'pop' : 'send'}.wav`)} volume={0.7} />
+                  <Audio src={staticFile('sfx/pop.wav')} volume={0.7} />
                 </Sequence>
                 {it.boom && (
                   <>
