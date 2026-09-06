@@ -6,5 +6,8 @@ public/sfx/
 public/music/
 public/photos/
 content/*.audio.json
+# ...except the Studio sample: src/index.jsx imports it statically, so the
+# Remotion bundle does not build without it. CI has no way to generate one.
+!content/sample.audio.json
 content/20*.json
 .env
