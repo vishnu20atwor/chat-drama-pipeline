@@ -2,7 +2,6 @@
 // Sheet → lint → voices → sounds → render → cover → copy. Writes out/<id>.*
 import {execSync} from 'node:child_process';
 import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
-import {fetchPhotos} from './lib/photo.mjs';
 import {hashOf} from '../src/theme.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -33,8 +32,6 @@ if (!existsSync('public/music/bed.wav')) {
 console.log(`\nvoicing ${id}`);
 run('python', ['scripts/tts.py', `content/${id}.json`]);
 const audio = JSON.parse(readFileSync(`content/${id}.audio.json`, 'utf8'));
-
-await fetchPhotos(content); // adds event.photoFile where PIXABAY_KEY allows
 
 // Gameplay under the thread. The clip is large and licensed to the operator, so
 // it lives outside the repo; CI fetches it once from BG_URL. Each day starts at

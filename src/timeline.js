@@ -9,7 +9,6 @@ export const f = (ms) => Math.max(1, Math.round((ms / 1000) * FPS));
 // video, and the whole thing has to land under 59s with the voices in it.
 export const GAP_MS = 260; // breath after a line is spoken, before the next beat
 export const TYPING_MS = 520; // default typing-dots time for an incoming bubble
-export const PHOTO_MS = 1400; // a photo bubble holds this long
 export const SEEN_MS = 1100;
 export const TIME_MS = 800;
 export const REACT_MS = 500; // extra hold when a bubble gets a tapback
@@ -32,8 +31,8 @@ export const timeline = (content, audio) => {
       const typingFrom = t;
       t += typing;
       const from = t;
-      const speak = ev.photo ? 0 : f(a.durationMs);
-      const hold = ev.photo ? f(PHOTO_MS) : speak + f(GAP_MS);
+      const speak = f(a.durationMs);
+      const hold = speak + f(GAP_MS);
       const extra = ev.react ? f(REACT_MS) : 0;
       t += hold + extra;
       // The riser runs up to the boom bubble, over whatever precedes it (the

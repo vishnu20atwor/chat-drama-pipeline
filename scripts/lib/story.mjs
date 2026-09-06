@@ -8,7 +8,6 @@
 //   [time 2 hours later]   a centered separator line
 //   [react ❤️]        a tapback on the previous bubble
 //   [boom]            the next bubble lands with a bass hit and a punch-in
-//   Mom: [photo: burnt birthday cake]   an image bubble (Pixabay, needs PIXABAY_KEY)
 //
 // This file turns that text into events, and refuses the ones that would make
 // a bad video. sheet.mjs, refill.mjs and lint.mjs all go through here.
@@ -62,13 +61,9 @@ export const parse = (script, pov = 'Me') => {
     const m = line.match(/^([A-Za-z][\w .'-]{0,20}?):\s*(.+)$/);
     if (!m) throw new Error(`can't read line "${line}" — expected "Name: text" or a [directive]`);
     const [, who, body] = m;
-    const photo = body.match(/^\[photo:?\s*(.+?)\]$/i);
     const ev = {kind: 'msg', who, side: who === pov ? 'out' : 'in', ...pending};
-    if (photo) ev.photo = photo[1].trim();
-    else {
-      ev.text = body;
-      ev.say = spoken(body); // what the voice reads; tts.py uses this, never `text`
-    }
+    ev.text = body;
+    ev.say = spoken(body); // what the voice reads; tts.py uses this, never `text`
     events.push(ev);
     pending = {};
   }

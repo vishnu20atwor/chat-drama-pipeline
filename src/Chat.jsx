@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {loadFont} from '@remotion/google-fonts/Inter';
 import {measureText} from '@remotion/layout-utils';
 import {FPS, H, SAFE_BOTTOM, SKINS, W, clockOf, hashOf, pickSkin} from './theme.js';
@@ -33,8 +33,6 @@ const RADIUS = 38;
 const GAP = 12; // between bubbles of the same sender
 const RUN_GAP = 26; // when the sender changes
 const NAME_H = 40; // sender name above a bubble, group chats only
-const PHOTO_W = 720; // a phone photo takes most of the width, like a real thread
-const PHOTO_H = 520;
 const TYPING_H = 76;
 const TIME_H = 64;
 const SEEN_H = 36;
@@ -137,7 +135,7 @@ const Typing = ({skin, frame}) => (
   </div>
 );
 
-const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
+const Bubble = ({item, skin, frame, showName, names}) => {
   const {fps} = useVideoConfig();
   const out = item.side === 'out';
   // The hook bubble is pre-rolled so it is already on screen at frame 0 —
@@ -149,15 +147,9 @@ const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
     <div style={{display: 'flex', flexDirection: 'column', alignItems: out ? 'flex-end' : 'flex-start', transformOrigin: out ? 'right bottom' : 'left bottom', transform: `scale(${0.7 + 0.3 * s}) translateY(${(1 - s) * 26}px)`, opacity: Math.min(1, s * 1.4)}}>
       {showName && <div style={{color: nameColor(item.who, names), fontFamily: FONT, fontSize: 30, fontWeight: 700, height: NAME_H, lineHeight: `${NAME_H}px`, paddingLeft: 18}}>{item.who}</div>}
       <div style={{position: 'relative'}}>
-        {item.photo ? (
-          <div style={{width: PHOTO_W, height: PHOTO_H, borderRadius: RADIUS, overflow: 'hidden', background: skin.inBg, border: `3px solid ${skin.line}`, boxShadow: '0 8px 24px rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90}}>
-            {photoFile ? <Img src={staticFile(photoFile)} style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : <span>📷</span>}
-          </div>
-        ) : (
-          <div style={{background: out ? skin.outBg : skin.inBg, color: out ? skin.outText : skin.inText, borderRadius: RADIUS, padding: `${BUBBLE_PAD_Y}px ${BUBBLE_PAD_X}px`, maxWidth: BUBBLE_MAX, fontFamily: FONT, fontSize: TEXT_PX, lineHeight: `${LINE_H}px`, fontWeight: 500, whiteSpace: 'pre-wrap', wordBreak: 'break-word', [out ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: 10}}>
-            {item.text}
-          </div>
-        )}
+        <div style={{background: out ? skin.outBg : skin.inBg, color: out ? skin.outText : skin.inText, borderRadius: RADIUS, padding: `${BUBBLE_PAD_Y}px ${BUBBLE_PAD_X}px`, maxWidth: BUBBLE_MAX, fontFamily: FONT, fontSize: TEXT_PX, lineHeight: `${LINE_H}px`, fontWeight: 500, whiteSpace: 'pre-wrap', wordBreak: 'break-word', [out ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: 10}}>
+          {item.text}
+        </div>
         {item.react && rs > 0 ? (
           <div style={{position: 'absolute', top: -34, [out ? 'left' : 'right']: -18, background: skin.header, border: `3px solid ${skin.line}`, borderRadius: 999, padding: '6px 16px', fontSize: 46, lineHeight: 1.1, transform: `scale(${rs})`, fontFamily: FONT, boxShadow: '0 6px 18px rgba(0,0,0,0.25)'}}>
             {item.react}
@@ -250,7 +242,7 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
             {rows.map((r, k) => (
               <div key={k} style={{marginTop: r.gap * (r.p ?? 1), height: r.kind === 'typing' ? r.h : r.p !== undefined && r.p < 1 ? r.h * r.p : undefined, overflow: r.kind === 'typing' || (r.p !== undefined && r.p < 1) ? 'hidden' : 'visible'}}>
                 {r.kind === 'typing' && <Typing skin={skin} frame={frame} />}
-                {r.kind === 'msg' && <Bubble item={r.item} skin={skin} frame={frame} showName={r.showName} cover={content.cover} photoFile={r.item.photoFile} names={[...inSpeakers]} />}
+                {r.kind === 'msg' && <Bubble item={r.item} skin={skin} frame={frame} showName={r.showName} cover={content.cover} names={[...inSpeakers]} />}
                 {r.kind === 'time' && <div style={{height: TIME_H, display: 'flex', alignItems: 'center', justifyContent: 'center', color: skin.sub, fontSize: 26, fontWeight: 600}}>{r.item.text}</div>}
                 {r.kind === 'seen' && <div style={{height: SEEN_H, textAlign: 'right', color: skin.sub, fontSize: 24, fontWeight: 600, paddingRight: 8}}>Read</div>}
               </div>
@@ -305,7 +297,7 @@ export const Chat = ({content, audio}) => {
   const heights = useMemo(
     () =>
       tl.items.map((it) => {
-        if (it.kind === 'msg') return it.photo ? PHOTO_H : linesOf(it.text) * LINE_H + BUBBLE_PAD_Y * 2;
+        if (it.kind === 'msg') return linesOf(it.text) * LINE_H + BUBBLE_PAD_Y * 2;
         if (it.kind === 'time') return TIME_H;
         if (it.kind === 'seen') return SEEN_H;
         return 0; // pause: nothing on screen

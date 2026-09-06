@@ -100,12 +100,12 @@ async def main(content_path):
         say = ev.get("say", "")  # sheet.mjs already expanded shorthand and dropped emoji
         if not say.strip() or not re.search(r"[A-Za-z0-9]", say):
             # a photo, or an emoji-only bubble: a beat of silence, no clip
-            clip = {"file": None, "durationMs": 900 if not ev.get("photo") else 0, "words": []}
+            clip = {"file": None, "durationMs": 900, "words": []}
         else:
             clip = await speak(say, cast[ev["who"]], out)
         events.append(clip)
         total += clip["durationMs"]
-        print(f'  {i:2} {ev["who"]:<9} {clip["durationMs"] / 1000:4.1f}s  {(ev.get("text") or "[photo]")[:56]}')
+        print(f'  {i:2} {ev["who"]:<9} {clip["durationMs"] / 1000:4.1f}s  {ev["text"][:56]}')
         i += 1
 
     cta = await speak(content.get("ctaSay") or "Follow for part two.", cast[NARRATOR], os.path.join(vo_dir, "cta.mp3"))

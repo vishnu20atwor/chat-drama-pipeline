@@ -48,7 +48,7 @@ jobs:
       - name: Sheet, voices, render
         env:
           SHEET_ID: ${{ secrets.SHEET_ID }}
-          PIXABAY_KEY: ${{ secrets.PIXABAY_KEY }}
+          BG_URL: ${{ secrets.BG_URL }}
         run: node scripts/build.mjs ${{ steps.d.outputs.date }}
 
       - name: Upload to YouTube
