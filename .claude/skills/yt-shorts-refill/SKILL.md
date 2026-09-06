@@ -47,15 +47,14 @@ channel wins on **rewatches, comments and follows**, not on polish.
 
 2. **Plan the lineup before writing a word.** For N days, choose series from the
    roster so no two consecutive days share one (a Part 2 is the exception and
-   lands the very next day). Hold the mix from the bible: roughly 40% funny,
-   35% twist/creepy, 25% tearjerker. Write the plan out — date, series, twist
+   lands the very next day). Hold the mix from the bible: roughly 50%
+   tearjerker/betrayal, 35% funny-with-a-twist, 15% drama. Write the plan out — date, series, twist
    type, one-line premise — and check it for two stories that resolve the same
    way before you write any dialogue.
 
 3. **Write the batch** as a JSON array in the scratchpad, one object per story
    with the sheet's columns. Leave `date` blank to continue after the last row.
-   Follow the beat shape and the word budget in the bible exactly. Every story
-   gets a photo beat.
+   Follow the beat shape and the word budget in the bible exactly.
 
 4. **Self-reject.** Run the bible's refusal list against every story before the
    linter sees it. Anything you can guess from title + bubble one goes back.
@@ -87,9 +86,9 @@ channel wins on **rewatches, comments and follows**, not on polish.
   later and add a misdirect.
 - The last bubble lands in ≤ 8 words. The CTA is a question a viewer answers in
   the comments, not "like and subscribe".
+- The title tells the viewer what to feel, in plain words. See the bible.
 - At least one `[boom]`, or `[seen]` + `[pause]`, around the reveal — with 2s of
   dead air in front of a `[boom]` so the riser has runway.
-- One photo beat, two at most, at the line where a real object enters.
 - Every character sounds like a person. Mom capitalises. Kids don't.
 - Nothing sexual, ever. Everything else — dark, creepy, revenge, grief — is in,
   if it is decent.

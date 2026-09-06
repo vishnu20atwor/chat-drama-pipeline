@@ -20,22 +20,17 @@ supernatural, crime, family secrets. The linter bans the words; you own the tone
 Craft that ignores the mechanics below produces stories that read well and get
 400 views. Six things move the number.
 
-## 1. Frame 0 is the thumbnail
+## 1. Frame 0 is the thumbnail, and it is now just the hook
 
-There is no custom thumbnail. The Short is judged on its first drawn frame, and
-that frame is: the yellow title, plus the hook bubble, already on screen — no
-typing dots, no fade. So:
+There is no headline band any more and no custom thumbnail. The Short is judged
+on its first drawn frame: the hook bubble, sitting at the bottom of the thread
+over the gameplay. So the hook bubble *is* the thumbnail.
 
-- **The title and the hook must not say the same thing.** If the title is "Mom
-  found a $400 receipt in my jacket" and bubble one is "I found a receipt in
-  your jacket", the frame carries one idea and reads as filler. Make the title
-  the *situation* and the hook the *voice* — or the title the accusation and the
-  hook the reply.
-- Both are readable in one glance or neither is. Title ≤ 45 characters is the
-  real target; the linter allows 100 but 100 renders small.
-- The frame should raise a question the viewer cannot answer from it. "Mom found
-  a receipt" is a question. "Mom found a ring I bought her" is an answer, and
+- It has to raise a question a stranger cannot answer from it. "Mom found a
+  receipt" is a question. "Mom found the ring I bought her" is an answer, and
   answers get swiped.
+- ≤ 10 words is a linter rule, but 6–8 reads better at feed size.
+- The YouTube **title** is separate and does different work — see Titles below.
 
 ## 2. The loop is a real mechanic — write for it
 
@@ -105,7 +100,7 @@ reads as a lineup instead of a content mill. Two rules:
 | Deny / escalate | 2–4 | The other side pushes back, or the stakes rise. Short lines, fast. |
 | Misdirect | 1–2 | Let the viewer form the wrong theory. This is what makes the twist land. |
 | Dread | directive | `[seen]` + `[pause 1.5]`, or `[typing 3]` — the silence before the turn. |
-| Turn | 1–2 | The reveal, on `[boom]`. **Show** it: a `[photo:]`, a `[time]` jump, a name, a number. |
+| Turn | 1–2 | The reveal, on `[boom]`. **Show** it: a `[time]` jump, a name, a number, a photo *described* in words. |
 | Land | 1–3 | One beat *after* the twist — the laugh, the tear, or the door. Last line ≤ 8 words. |
 | CTA | `cta` | A question with two defensible answers, ≤ 7 words. |
 
@@ -120,16 +115,19 @@ Cut the middle, never the turn.
 | Dad Jokes Inc | Dad, Me | Deadpan dad, escalating bit, the joke hides a soft landing | funny |
 | Grandma Learns Texting | Grandma, Me | Autocorrect, caps lock, Google confusion; she means every word | funny → tearjerker |
 | Little Brother Logic | Bro or Kid, Me | Negotiations, blackmail with crayons, kid math | funny |
-| Wrong Number | Unknown or Stranger, Me | A text meant for someone else — a kindness, a mystery, or a threat | twist / creepy |
+| Wrong Number | Unknown or Stranger, Me | A text meant for someone else — a kindness or a mistake that turns warm | twist |
 | Group Chat Chaos | Mom, Dad, Sis, Bro (pov Me, contact "Family") | Four voices, one disaster, sender names shown | funny |
 | Mr. Reyes, 3rd Period | Teacher, Me | Excuses vs. deadpan; the teacher always knows more | funny / tearjerker |
 | Boss Texted at 11 PM | Boss, Me | Dread text, then a turn — the boss is human, or the boss is the problem | twist |
 | Dog Sitter Updates | Neighbor or Bestie, Me | Escalating updates about the dog; the dog wins | funny |
 | Roommate Notes | Roommate, Me | Fridge wars, passive aggression, a reveal | funny / twist |
-| Unknown Number | Unknown, Me | Someone knows something they shouldn't. Creepy, PG, ends on a chill | creepy |
 | Last Message | any, Me | A conversation that turns out to be the last one — or the first after a loss | tearjerker |
 
-Target mix per 30 days: ~12 funny, ~10 twist/creepy, ~8 tearjerker.
+**Target mix per 30 days: ~15 tearjerker/betrayal, ~10 funny-with-a-twist, ~5
+drama.** This is measured, not taste: on a Shorts search of this exact niche the
+top three videos were all sad (38M, 6.6M, 6.4M), the best comedy was 3.4M, and a
+psychological-horror entry had 8 views. Creepy is retired — the "Unknown Number"
+series is gone and Wrong Number now resolves warm, not sinister.
 
 ## Hook formulas (first bubble)
 
@@ -150,7 +148,7 @@ scrolls past. Start in the middle.
 2. **The wrong theory** — the viewer thinks betrayal; it's a surprise party, a diagnosis, a lost dog.
 3. **The identity flip** — the "stranger" is your brother's new phone; the "boss" is your mom's boss.
 4. **The time jump** — `[time 6 hours later]` and everything has changed.
-5. **The receipt** — a `[photo:]` of the thing that proves it.
+5. **The receipt** — the number, the address, the name that proves it.
 6. **The echo** — the last line repeats the first with its meaning inverted. Best loop payoff in the list.
 7. **The dread payoff (creepy)** — the texter is in the house / has your old number / is the person being described.
 8. **The kid wins** — the negotiation ends with the adult outplayed.
@@ -185,38 +183,27 @@ Caps and exact durations are in `pipeline-facts.md`. Intent:
 [time ...]      "2 hours later", "Next morning", "3 missed calls later"
 [react ❤️]      after a bubble that earned it; 😂 🔥 😭 also work
 [boom]          the reveal bubble, once per story — needs 2s of dead air before it
-Name: [photo: three-word scene]   the proof
 ```
 
-**Photo beats are not optional.** Every story gets one, two at most, at the line
-where a real object enters: keys on the counter, the car door left open, the
-burnt cake, the dented bumper, the ring box. It is what makes the conversation
-read as two people with phones instead of a script.
+## Titles — tell them what to feel
 
-- Put it right after the line that names the thing — or *before*, when the photo
-  **is** the answer.
-- The sender is whoever would have taken it. Mom photographs the mess; the
-  stranger photographs the window; Me photographs the proof.
-- A photo is silent and holds 1.4s. It is a beat, not a bubble — don't put one
-  where the pace needs to run.
-- Search-term rules (scenes not people, no mood adjectives) are in
-  `pipeline-facts.md`. Getting them wrong is the most common reason a finished
-  video looks like a stock-photo ad.
-- **Loop bonus:** a photo that contains a detail which only makes sense after
-  the twist is the strongest rewatch trigger this format has.
+The single cheapest change found in the research. The winners in this niche do
+not describe the story, they **instruct the emotion**, bluntly, in plain words:
 
-## Titles (the yellow headline)
+> "This Video Will Make You Cry" · "You backstabbed me…" · "Don't Miss End 😔"
 
-The title *is* the thumbnail. ≤ 60 characters reads at 62px; ≤ 45 is better.
-Formula: **who + what happened + one emoji**. Present tense, or "just".
+Ours used to read "Mom found a $400 jewelry receipt in my jacket 💍" — accurate,
+descriptive, emotionally neutral, and it gave the twist away. Write instead:
 
-- "Mom found a $400 jewelry receipt in my jacket 💍"
-- "Wrong number asked me to hide a package 📦"
-- "Grandma texted the family group chat at 3 AM 🍪"
-- "My boss texted 'we need to talk' at 11 PM 👔"
-- "Dad's been texting my dead grandpa's number 📱"
+- **The feeling, stated:** "This one made me cry" · "Try not to cry at the end"
+- **The betrayal, first person:** "My best friend did this to me" · "She lied for three years"
+- **The instruction:** "Watch till the end" · "Don't skip the last message"
+- **The relationship + the wound:** "My mom never told me why she sold her ring"
 
-Never put the twist in the title, and never let the title duplicate bubble one.
+Rules: ≤ 60 characters, ≤ 45 is better. One emoji, at the end, matching the
+feeling (😭 💙 😔 for sad; 😂 💀 for funny). **Never put the twist in the title**,
+and never let the title restate the hook bubble — the frame carries one idea
+twice if you do.
 
 ## Description, hashtags, pinned
 

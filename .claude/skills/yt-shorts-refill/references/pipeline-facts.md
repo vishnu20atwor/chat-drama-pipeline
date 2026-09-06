@@ -14,8 +14,7 @@ the code, the code is right — fix this file in the same commit.
 ```
 sheet/stories.csv          one row per day, `date` = the day it posts
   -> scripts/sheet.mjs     finds today's row, parses + lints -> content/<date>.json
-  -> scripts/tts.py        one edge-tts clip per bubble, per-character voice, word timings
-  -> lib/photo.mjs         [photo:] terms -> Pixabay -> public/photos/<date>/
+  -> scripts/tts.py        one clip per bubble (ElevenLabs, falling back to edge-tts)
   -> src/timeline.js       events -> frames
   -> remotion render       -> out/<date>.mp4  (+ .cover.jpg, .meta.json, .post.txt)
   -> scripts/upload.mjs    YouTube Data API v3
@@ -53,7 +52,6 @@ already in the sheet.
 
 `sum(spoken(bubble.text)) + words(cta)`. Consequences:
 
-- **Photo bubbles cost zero words** but 1.4s of screen time. They buy pace.
 - Slang is expanded *before* counting: `idk` becomes "I don't know" — **3 words,
   not 1**. `Me: idk tbh omg` is 8 spoken words. Slang is cheap to read and
   expensive to count.
@@ -106,7 +104,6 @@ in the same commit — never ship a story that relies on a fallback.
 | `[seen]` | — | 1.1s |
 | `[time ...]` | — | 0.8s |
 | `[react X]` | — | +0.5s on the bubble it attaches to |
-| `Name: [photo: ...]` | — | 1.4s, silent |
 | default typing | — | 0.52s automatically before every incoming bubble |
 | per-bubble breath | — | 0.26s after each spoken line |
 
@@ -139,22 +136,7 @@ feed shows before anyone taps.
   pinning it is Studio-only
 - category 24 (Entertainment), en-US, not made for kids
 - `out/<date>.cover.jpg` is generated but **never uploaded** — Shorts use a
-  video frame, so the title bubble at frame 0 is the real thumbnail
-
-## Photo search terms (`lib/photo.mjs`)
-
-The picker pulls Pixabay's top 25 horizontal hits and re-scores them: relevance
-first, then casual-snapshot over studio-stock, then a mild penalty on the
-most-downloaded shots so the same picture doesn't recur across stories. It can
-only do that if the term names a **scene**.
-
-- 2–4 concrete words with a place: `keys on kitchen counter`,
-  `car door open driveway`, `open window at night`
-- no adjectives of mood or quality: not `beautiful sunset`, not `sad empty room`
-- **never ask for a person** — Pixabay's people are posed models and the scoring
-  can't rescue them. `backyard fence at dusk`, not `man in backyard`.
-- without `PIXABAY_KEY` the bubble renders as a grey camera placeholder and the
-  build log says so
+  video frame, so the hook bubble at frame 0 is the real thumbnail
 
 ## The refill file format (`scripts/refill.mjs`)
 
@@ -164,14 +146,14 @@ blank dates continue the day after the last row in the sheet, in array order.
 ```json
 [
   {
-    "series": "Wrong Number",
-    "title": "A stranger texted me my own address",
-    "contact": "Unknown",
+    "series": "Texts From Mom",
+    "title": "My mom found the receipt I was hiding",
+    "contact": "Mom",
     "script": "Unknown: The package is under the mat.\nMe: i think u have the wrong number\n[typing 3]\nUnknown: 14 Birch Lane. Blue door.",
-    "cta": "Would you have opened it?",
+    "cta": "Would you have told her?",
     "description": "Two sentences of premise, no spoiler.",
-    "hashtags": "#textstory #chatstory #wrongnumber #storytime",
-    "pinned": "What would YOU have done?"
+    "hashtags": "#textstory #chatstory #momtexts #storytime",
+    "pinned": "What would YOU have said?"
   }
 ]
 ```
@@ -189,3 +171,23 @@ at 8 PM on a runner nobody is watching.
 | `skin` | picked deterministically from the date; `dark`, `light`, `green` also valid |
 | `part` | none; set it only for multi-part cliffhangers |
 | `cta` | "Follow for tomorrow's story" |
+
+## Music and mood
+
+There is no `mood` column. `content/channel.json` maps each **series** to one of
+three generated beds — `sad`, `light`, `tense` — and build.mjs renders only the
+bed that day needs. A new series must be added to `channel.json.moods` or it
+falls back to `defaultMood`.
+
+## Voices
+
+`content/voices.json` carries both engines per character: an edge-tts `voice`
+and an ElevenLabs `eleven` name. With `ELEVENLABS_KEY_*` set, ElevenLabs is used
+and unresolvable names fall back to edge with a warning. Adding a character
+means adding both.
+
+## What no longer exists
+
+`[photo:]`, Pixabay, `PIXABAY_KEY`, the image bubble, word-level karaoke
+timings, and the yellow headline band. Do not write photo beats — the grammar
+rejects them, and the linter will fail the whole batch.
