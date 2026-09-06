@@ -26,7 +26,7 @@ const channel = JSON.parse(readFileSync('content/channel.json', 'utf8'));
 if (!existsSync('public/sfx/riser.wav')) run('python', ['scripts/sfx.py', 'public/sfx']);
 // One bed per mood, not one bed for the channel: a dad joke and a mother crying
 // at a red light were sharing the same uneasy A-minor loop.
-const mood = channel.moods?.[content.series] || channel.defaultMood || 'sad';
+const mood = content.mood || channel.moods?.[content.series] || channel.defaultMood || 'sad';
 content.mood = mood;
 if (!existsSync(`public/music/${mood}.wav`)) {
   mkdirSync('public/music', {recursive: true});

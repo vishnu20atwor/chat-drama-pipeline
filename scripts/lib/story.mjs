@@ -150,6 +150,9 @@ export const check = (row) => {
     pov,
     contact: row.contact || msgs.find((m) => m.side === 'in')?.who || 'Unknown',
     skin: row.skin || '',
+    // Optional. Overrides the series' bed in channel.json, so a mostly-funny
+    // show can still have its sad episode. Blank means "whatever the series is".
+    mood: row.mood || '',
     cta: row.cta || 'Follow for tomorrow’s story 👀',
     ctaSay: spoken(row.cta || 'Follow for tomorrow’s story'),
     description: row.description || '',
@@ -197,7 +200,7 @@ export const parseCsv = (text) => {
     .map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? '').trim()])));
 };
 
-export const COLUMNS = ['date', 'series', 'part', 'title', 'pov', 'contact', 'skin', 'script', 'cta', 'description', 'hashtags', 'pinned'];
+export const COLUMNS = ['date', 'series', 'part', 'title', 'pov', 'contact', 'skin', 'mood', 'script', 'cta', 'description', 'hashtags', 'pinned'];
 const cell = (v) => {
   const s = v == null ? '' : String(v);
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
