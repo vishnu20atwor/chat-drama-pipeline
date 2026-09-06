@@ -18,10 +18,12 @@ const PROGRESS_H = 8;
 // The gameplay band. The thread sits above it; this is the half of the screen
 // that used to be empty black. With no background clip the band is 0 and the
 // thread takes the whole frame, so a missing asset costs nothing.
-const GAMEPLAY_H = 700;
+const GAMEPLAY_H = 880;
 const CHAT_Y = HEADER_Y + HEADER_H + 8;
 const INPUT_H = 84;
-const CARD_R = 44; // the screenshot's rounded bottom corners
+const CARD_R = 44;   // the screenshot's rounded corners
+const CARD_M = 40;   // side margin, so the card floats instead of spanning the frame
+const CARD_TOP = 96; // gameplay visible above it too
 
 const PAD_X = 32;
 const BUBBLE_MAX = 830; // px, ≈77% of the width — a touch wider than a real phone, for legibility at Shorts size
@@ -138,13 +140,12 @@ const Typing = ({skin, frame}) => (
 const Bubble = ({item, skin, frame, showName, names}) => {
   const {fps} = useVideoConfig();
   const out = item.side === 'out';
-  // The hook bubble is pre-rolled so it is already on screen at frame 0 —
-  // that frame is the feed thumbnail.
-  const s = spring({frame: frame - item.from + (item.i === 0 ? 6 : 0), fps, config: {damping: 15, stiffness: 190, mass: 0.7}});
+  // No entrance animation. A message appears whole, the way it does when you
+  // are actually looking at a phone — the thread growing is the movement.
   const reactAt = item.until - Math.round(0.65 * fps);
   const rs = item.react ? spring({frame: frame - reactAt, fps, config: {damping: 10, stiffness: 220}}) : 0;
   return (
-    <div style={{display: 'flex', flexDirection: 'column', alignItems: out ? 'flex-end' : 'flex-start', transformOrigin: out ? 'right bottom' : 'left bottom', transform: `scale(${0.7 + 0.3 * s}) translateY(${(1 - s) * 26}px)`, opacity: Math.min(1, s * 1.4)}}>
+    <div style={{display: 'flex', flexDirection: 'column', alignItems: out ? 'flex-end' : 'flex-start'}}>
       {showName && <div style={{color: nameColor(item.who, names), fontFamily: FONT, fontSize: 30, fontWeight: 700, height: NAME_H, lineHeight: `${NAME_H}px`, paddingLeft: 18}}>{item.who}</div>}
       <div style={{position: 'relative'}}>
         <div style={{background: out ? skin.outBg : skin.inBg, color: out ? skin.outText : skin.inText, borderRadius: RADIUS, padding: `${BUBBLE_PAD_Y}px ${BUBBLE_PAD_X}px`, maxWidth: BUBBLE_MAX, fontFamily: FONT, fontSize: TEXT_PX, lineHeight: `${LINE_H}px`, fontWeight: 500, whiteSpace: 'pre-wrap', wordBreak: 'break-word', [out ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: 10}}>
@@ -171,7 +172,7 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
   let total = TIME_H;
   let prevWho = null;
   let prevSide = null;
-  const ENTER = 9;
+  const ENTER = 1; // the slot opens on the frame the message lands, no grow-in
   for (let k = 0; k < tl.items.length; k++) {
     const it = tl.items[k];
     // "Read" is a receipt on *your* message. After an incoming bubble the
@@ -211,6 +212,12 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
   const phoneH = content.bg ? H - GAMEPLAY_H : SAFE_BOTTOM;
   const inputY = phoneH - INPUT_H - 26;
   const chatH = inputY - CHAT_Y - 12;
+  // Over gameplay the card floats: inset on all four sides, rounded all round,
+  // so it reads as a screenshot dropped on the footage rather than a slab
+  // welded to the top of the frame. Scaling keeps every child's coordinates.
+  const cardScale = content.bg ? (W - CARD_M * 2) / W : 1;
+  const cardTop = content.bg ? CARD_TOP : 0;
+  const cardBottom = cardTop + phoneH * cardScale;
   const offset = total - chatH;
 
   // The twist beat: punch-in, a flash, and a shake on a [boom] bubble.
@@ -229,7 +236,7 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
       <Gameplay bg={content.bg} />
       <AbsoluteFill style={{transform: `translate(${shakeX}px, ${shakeY}px) scale(${punch})`, transformOrigin: '50% 45%'}}>
         {/* the screenshot: the whole phone, clipped, sitting over the gameplay */}
-        <div style={{position: 'absolute', top: 0, left: 0, width: W, height: phoneH, overflow: 'hidden', background: skin.bg, borderBottomLeftRadius: content.bg ? CARD_R : 0, borderBottomRightRadius: content.bg ? CARD_R : 0, boxShadow: content.bg ? '0 18px 50px rgba(0,0,0,0.55)' : 'none'}}>
+        <div style={{position: 'absolute', top: cardTop, left: content.bg ? CARD_M : 0, width: W, height: phoneH, transform: `scale(${cardScale})`, transformOrigin: 'top left', overflow: 'hidden', background: skin.bg, borderRadius: content.bg ? CARD_R / cardScale : 0, boxShadow: content.bg ? '0 22px 60px rgba(0,0,0,0.6)' : 'none'}}>
         {skin.pattern && (
           <AbsoluteFill style={{opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20px 20px, #fff 2px, transparent 3px)', backgroundSize: '80px 80px'}} />
         )}
@@ -263,7 +270,7 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
         </div>
 
         {content.series ? (
-          <div style={{position: 'absolute', top: phoneH + 26, width: W, textAlign: 'center', color: '#fff', fontSize: 30, fontWeight: 700, textShadow: '0 3px 12px rgba(0,0,0,0.9)'}}>
+          <div style={{position: 'absolute', top: cardBottom + 26, width: W, textAlign: 'center', color: '#fff', fontSize: 30, fontWeight: 700, textShadow: '0 3px 12px rgba(0,0,0,0.9)'}}>
             {content.series}
             {content.part ? ` · Part ${content.part}` : ''}
           </div>

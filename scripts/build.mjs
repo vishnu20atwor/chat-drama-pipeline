@@ -64,7 +64,9 @@ if (!existsSync(BG) && process.env.BG_URL) {
   }
 }
 if (existsSync(BG)) {
-  const probe = execSync(`npx remotion ffprobe ${BG}`, {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']});
+  // ffprobe writes to stderr, not stdout. Capturing only stdout left secs at 0,
+  // which collapsed every day's window to 0s — the same footage every time.
+  const probe = execSync(`npx remotion ffprobe ${BG} 2>&1`, {encoding: 'utf8'});
   const m = probe.match(/Duration: (\d+):(\d+):(\d+)/);
   const secs = m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : 0;
   const room = Math.max(1, secs - MAX_S - 5); // never run off the end of the clip
