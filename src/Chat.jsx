@@ -142,22 +142,6 @@ const Typing = ({skin, frame}) => (
   </div>
 );
 
-const Words = ({text, item, frame, color, cover}) => {
-  const parts = text.split(' ');
-  let lit = parts.length;
-  if (!cover && frame < item.from + item.speak) {
-    const ms = ((frame - item.from) / FPS) * 1000;
-    if (item.words.length === parts.length) lit = item.words.filter((w) => w.t <= ms + 40).length;
-    else lit = Math.floor((parts.length * ms) / Math.max(1, item.durationMs));
-  }
-  return parts.map((w, k) => (
-    <span key={k} style={{color, opacity: k < lit ? 1 : 0.5, transition: 'none'}}>
-      {w}
-      {k < parts.length - 1 ? ' ' : ''}
-    </span>
-  ));
-};
-
 const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
   const {fps} = useVideoConfig();
   const out = item.side === 'out';
@@ -175,8 +159,8 @@ const Bubble = ({item, skin, frame, showName, cover, photoFile, names}) => {
             {photoFile ? <Img src={staticFile(photoFile)} style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : <span>📷</span>}
           </div>
         ) : (
-          <div style={{background: out ? skin.outBg : skin.inBg, borderRadius: RADIUS, padding: `${BUBBLE_PAD_Y}px ${BUBBLE_PAD_X}px`, maxWidth: BUBBLE_MAX, fontFamily: FONT, fontSize: TEXT_PX, lineHeight: `${LINE_H}px`, fontWeight: 500, whiteSpace: 'pre-wrap', wordBreak: 'break-word', [out ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: 10}}>
-            <Words text={item.text} item={item} frame={frame} color={out ? skin.outText : skin.inText} cover={cover} />
+          <div style={{background: out ? skin.outBg : skin.inBg, color: out ? skin.outText : skin.inText, borderRadius: RADIUS, padding: `${BUBBLE_PAD_Y}px ${BUBBLE_PAD_X}px`, maxWidth: BUBBLE_MAX, fontFamily: FONT, fontSize: TEXT_PX, lineHeight: `${LINE_H}px`, fontWeight: 500, whiteSpace: 'pre-wrap', wordBreak: 'break-word', [out ? 'borderBottomRightRadius' : 'borderBottomLeftRadius']: 10}}>
+            {item.text}
           </div>
         )}
         {item.react && rs > 0 ? (
@@ -232,7 +216,10 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
     rows.push({kind: it.kind, item: it, h, gap, showName, p});
     total += (h + gap) * p;
   }
-  const offset = Math.max(0, total - CHAT_H);
+  // Bottom-anchored, like every real messaging app: the newest bubble sits just
+  // above the input bar and the thread grows upward. Clamping this at 0 was why
+  // the opening seconds were 60% empty black.
+  const offset = total - CHAT_H;
 
   // The twist beat: punch-in, a flash, and a shake on a [boom] bubble.
   const boom = tl.items.find((it) => it.boom && frame >= it.from && frame < it.from + 10);
