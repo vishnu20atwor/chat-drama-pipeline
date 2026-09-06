@@ -48,7 +48,11 @@ jobs:
       - name: Sheet, voices, render
         env:
           SHEET_ID: ${{ secrets.SHEET_ID }}
-          BG_URL: ${{ secrets.BG_URL }}
+          # Minecraft parkour gameplay, published for free commercial reuse by
+          # automatesocials.com. Not a secret, so it sits here in the open where
+          # it can be read and changed. 10m32s, so each day starts at a
+          # different second and nothing repeats for over a year.
+          BG_URL: https://automatesocials.com/wp-content/uploads/2024/02/12-Minecraft-Parkour-Gameplay.zip
           ELEVENLABS_KEY_1: ${{ secrets.ELEVENLABS_KEY_1 }}
           ELEVENLABS_KEY_2: ${{ secrets.ELEVENLABS_KEY_2 }}
         run: node scripts/build.mjs ${{ steps.d.outputs.date }}

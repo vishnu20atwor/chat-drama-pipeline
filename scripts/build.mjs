@@ -1,7 +1,7 @@
 // One command per video:  npm run build -- 2026-09-06
 // Sheet → lint → voices → sounds → render → cover → copy. Writes out/<id>.*
 import {execSync} from 'node:child_process';
-import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {hashOf} from '../src/theme.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -47,10 +47,20 @@ if (!existsSync(BG) && process.env.BG_URL) {
   console.log('fetching the gameplay loop');
   try {
     const res = await fetch(process.env.BG_URL);
-    if (res.ok) writeFileSync(BG, Buffer.from(await res.arrayBuffer()));
-    else console.warn(`  ⚠ BG_URL -> HTTP ${res.status}; rendering without gameplay`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    // The publisher ships it zipped. Extract in place rather than mirroring a
+    // 167MB file somewhere of our own; `unzip` is on every ubuntu runner.
+    if (/\.zip($|\?)/i.test(process.env.BG_URL)) {
+      writeFileSync('public/bg/loop.zip', buf);
+      execSync(`unzip -p public/bg/loop.zip '*.mp4' > ${BG}`, {stdio: ['ignore', 'ignore', 'inherit'], shell: '/bin/bash'});
+      rmSync('public/bg/loop.zip', {force: true});
+    } else writeFileSync(BG, buf);
+    if (!existsSync(BG) || statSync(BG).size < 1e6) throw new Error('no usable mp4 in the download');
+    console.log(`  gameplay loop ready (${(statSync(BG).size / 1e6).toFixed(0)}MB)`);
   } catch (e) {
-    console.warn(`  ⚠ BG_URL failed: ${e.message}; rendering without gameplay`);
+    console.warn(`  ! BG_URL failed: ${e.message}; rendering without gameplay`);
+    rmSync(BG, {force: true});
   }
 }
 if (existsSync(BG)) {

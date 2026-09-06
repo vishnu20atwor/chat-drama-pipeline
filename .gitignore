@@ -5,6 +5,8 @@ public/vo/
 public/sfx/
 public/music/
 public/photos/
+# the gameplay loop: 167MB, fetched from BG_URL at build time
+public/bg/
 content/*.audio.json
 # ...except the Studio sample: src/index.jsx imports it statically, so the
 # Remotion bundle does not build without it. CI has no way to generate one.
