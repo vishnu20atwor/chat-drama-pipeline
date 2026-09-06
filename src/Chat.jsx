@@ -321,7 +321,7 @@ export const Chat = ({content, audio}) => {
       {/* --- audio --- */}
       {!content.cover && (
         <>
-          <Audio src={staticFile('music/bed.wav')} volume={0.11} loop />
+          <Audio src={staticFile(`music/${content.mood || 'sad'}.wav`)} volume={0.11} loop />
           {tl.items
             .filter((it) => it.kind === 'msg')
             .map((it) => (

@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Generate the music bed: a soft, slightly uneasy chord loop. No dependencies.
+"""Generate a music bed for one mood. No dependencies.
 
-    python scripts/bed.py public/music/bed.wav
+    python scripts/bed.py public/music/sad.wav sad
 
 Why generated: the YouTube Audio Library needs a browser and a login, and a
-Short with no bed under the voices reads as cheap. Am – F – C – G at 92 BPM:
-a felt-piano-ish pluck on the eighths over a slow pad. Sits at ~12% under the
-voices — texture, not a soundtrack. Drop a real track in public/music/ and
-point the `bed` field in content/channel.json at it to replace this.
+Short with no bed under the voices reads as cheap.
+
+There used to be one bed for every story, so a comedy about a dad joke and a
+mother crying at a red light played over the same uneasy A-minor loop. Three
+now, picked per story from the series in content/channel.json:
+
+  sad    slow A minor, pad forward, the pluck almost absent. Tearjerkers.
+  light  C major at 104, bright arpeggio, barely any low end. Comedy.
+  tense  A minor with a flattened neighbour chord and a hard heartbeat. Drama.
+
+All three sit at ~11% under the voices - texture, not a soundtrack.
 """
 import math
 import struct
@@ -15,13 +22,29 @@ import sys
 import wave
 
 RATE = 22050
-BPM = 92
-BEAT = 60.0 / BPM
-BAR = BEAT * 4
-# A minor: Am, F, C, G  (root, third, fifth as midi notes)
-CHORDS = [(57, 60, 64), (53, 57, 60), (48, 52, 55), (55, 59, 62)]
+
+# bpm, chords (root/third/fifth as midi), and the mix between the three layers.
+MOODS = {
+    "sad": {
+        "bpm": 76,
+        "chords": [(57, 60, 64), (53, 57, 60), (48, 52, 55), (55, 59, 62)],  # Am F C G
+        "mix": (0.40, 0.18, 0.26),
+        "decay": 6.0,
+    },
+    "light": {
+        "bpm": 104,
+        "chords": [(60, 64, 67), (55, 59, 62), (57, 60, 64), (53, 57, 60)],  # C G Am F
+        "mix": (0.20, 0.42, 0.08),
+        "decay": 9.0,
+    },
+    "tense": {
+        "bpm": 88,
+        "chords": [(57, 60, 64), (56, 59, 63), (57, 60, 64), (52, 56, 59)],  # Am G#dim Am E
+        "mix": (0.34, 0.14, 0.40),
+        "decay": 7.5,
+    },
+}
 LOOPS = 6
-SECONDS = BAR * len(CHORDS) * LOOPS  # ≈ 62.6s, an exact number of bars so it loops clean
 
 
 def hz(midi):
@@ -36,36 +59,43 @@ def pad(t, chord):
     return v / len(chord) * (0.8 + 0.2 * math.sin(2 * math.pi * 0.11 * t))
 
 
-def pluck(t, chord, in_bar):
+def pluck(t, chord, in_bar, beat, decay):
     # eighth-note arpeggio: root, fifth, third, fifth, root+8, fifth, third, fifth
     order = [0, 2, 1, 2, 0, 2, 1, 2]
-    step = BEAT / 2
+    step = beat / 2
     k = int(in_bar / step)
     p = in_bar - k * step
     n = chord[order[k % 8]] + (12 if k == 4 else 0)
     f = hz(n)
-    env = math.exp(-p * 7.0)
+    env = math.exp(-p * decay)
     return (math.sin(2 * math.pi * f * p) + 0.3 * math.sin(2 * math.pi * f * 2 * p) + 0.12 * math.sin(2 * math.pi * f * 3 * p)) * env
 
 
-def sample(t):
-    bar = int(t / BAR)
-    chord = CHORDS[bar % len(CHORDS)]
-    in_bar = t - bar * BAR
+def sample(t, m, beat, bar_len):
+    bar = int(t / bar_len)
+    chord = m["chords"][bar % len(m["chords"])]
+    in_bar = t - bar * bar_len
     # soft heartbeat: a low thump on 1 and the "and" of 2
     thump = 0.0
-    for at in (0.0, BEAT * 1.5):
+    for at in (0.0, beat * 1.5):
         p = in_bar - at
         if 0 <= p < 0.4:
             thump += math.sin(2 * math.pi * 55 * p) * math.exp(-p * 16)
-    return 0.30 * pad(t, chord) + 0.34 * pluck(t, chord, in_bar) + 0.28 * thump
+    a, b, c = m["mix"]
+    return a * pad(t, chord) + b * pluck(t, chord, in_bar, beat, m["decay"]) + c * thump
 
 
-def main(path):
-    n = int(RATE * SECONDS)
+def main(path, mood):
+    m = MOODS.get(mood)
+    if not m:
+        raise SystemExit(f"unknown mood {mood!r}; expected one of {', '.join(MOODS)}")
+    beat = 60.0 / m["bpm"]
+    bar_len = beat * 4
+    seconds = bar_len * len(m["chords"]) * LOOPS  # an exact number of bars, so it loops clean
+    n = int(RATE * seconds)
     frames = bytearray()
     for i in range(n):
-        v = sample(i / RATE)
+        v = sample(i / RATE, m, beat, bar_len)
         edge = min(1.0, i / (RATE * 0.05), (n - i) / (RATE * 0.05))
         frames += struct.pack("<h", int(max(-1.0, min(1.0, v * edge)) * 32767 * 0.85))
     with wave.open(path, "wb") as w:
@@ -73,10 +103,10 @@ def main(path):
         w.setsampwidth(2)
         w.setframerate(RATE)
         w.writeframes(bytes(frames))
-    print(f"  {path}  {SECONDS:.1f}s @ {RATE}Hz")
+    print(f"  {path}  {mood}  {seconds:.1f}s @ {RATE}Hz")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         raise SystemExit(__doc__)
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
