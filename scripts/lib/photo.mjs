@@ -7,7 +7,7 @@
 // isolated-on-white product photos and renders, and a text conversation needs
 // the opposite: something that looks like a person raised their phone and
 // pressed the button. So the top 25 hits are scored and the most casual wins.
-import {existsSync, mkdirSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {hashOf} from '../../src/theme.js';
 
 // Tags that mean "stock", not "snapshot". Each one costs the hit a point.
@@ -54,6 +54,15 @@ const score = (hit, query) => {
   return s;
 };
 
+// A photo is a garnish. Pixabay rate-limits, its CDN can refuse a datacenter IP,
+// and a truncated download is still a file on disk — so every failure below
+// degrades to the grey placeholder and the render carries on. Losing the day's
+// Short over a stock photo is the worst trade this pipeline could make.
+const isJpeg = (b) => b.length > 1024 && b[0] === 0xff && b[1] === 0xd8;
+
+// Node's default UA is "node", which some image CDNs refuse outright. Hedge.
+const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
 export const fetchPhotos = async (content) => {
   const msgs = content.events.filter((e) => e.kind === 'msg');
   const want = msgs.filter((e) => e.photo);
@@ -68,31 +77,49 @@ export const fetchPhotos = async (content) => {
   for (const ev of want) {
     const i = msgs.indexOf(ev);
     const file = `photos/${content.id}/${i}.jpg`;
-    if (!existsSync(`public/${file}`)) {
-      const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(ev.photo)}&image_type=photo&orientation=horizontal&safesearch=true&per_page=25`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.warn(`  ⚠ pixabay ${res.status} for "${ev.photo}" — placeholder`);
+    const path = `public/${file}`;
+    // A broken file cached by an earlier run would fail the render forever.
+    if (existsSync(path) && !isJpeg(readFileSync(path))) rmSync(path);
+    if (!existsSync(path)) {
+      try {
+        const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(ev.photo)}&image_type=photo&orientation=horizontal&safesearch=true&per_page=25`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`  ⚠ pixabay ${res.status} for "${ev.photo}" — placeholder`);
+          continue;
+        }
+        const hits = (await res.json()).hits || [];
+        if (!hits.length) {
+          console.warn(`  ⚠ no pixabay result for "${ev.photo}" — placeholder`);
+          continue;
+        }
+        // Best score wins; ties keep Pixabay's relevance order, and the story id
+        // picks among the top two so two stories that ask for "keys on the
+        // counter" don't ship the same picture.
+        const ranked = hits.map((h, k) => ({h, k, s: score(h, ev.photo)})).sort((a, b) => b.s - a.s || a.k - b.k);
+        const top = ranked.filter((r) => r.s > -99).slice(0, 2);
+        if (!top.length) {
+          console.warn(`  ⚠ no relevant pixabay result for "${ev.photo}" — placeholder`);
+          continue;
+        }
+        const hit = top[hashOf(content.id + ev.photo) % top.length].h;
+        const img = await fetch(hit.webformatURL, {headers: {'user-agent': UA}});
+        if (!img.ok) {
+          console.warn(`  ⚠ image ${img.status} for "${ev.photo}" (${hit.webformatURL}) — placeholder`);
+          continue;
+        }
+        const buf = Buffer.from(await img.arrayBuffer());
+        // Whatever came back, it has to be a JPEG or Remotion dies loading it.
+        if (!isJpeg(buf)) {
+          console.warn(`  ⚠ not a JPEG for "${ev.photo}": ${buf.length}B starting ${buf.subarray(0, 12).toString('hex')} — placeholder`);
+          continue;
+        }
+        writeFileSync(path, buf);
+        console.log(`  photo ${i}: "${ev.photo}" → pixabay #${hit.id} (score ${ranked[0].s}, ${hits.length} hits, ${buf.length}B)`);
+      } catch (e) {
+        console.warn(`  ⚠ photo "${ev.photo}" failed: ${e.message} — placeholder`);
         continue;
       }
-      const hits = (await res.json()).hits || [];
-      if (!hits.length) {
-        console.warn(`  ⚠ no pixabay result for "${ev.photo}" — placeholder`);
-        continue;
-      }
-      // Best score wins; ties keep Pixabay's relevance order, and the story id
-      // picks among the top two so two stories that ask for "keys on the
-      // counter" don't ship the same picture.
-      const ranked = hits.map((h, k) => ({h, k, s: score(h, ev.photo)})).sort((a, b) => b.s - a.s || a.k - b.k);
-      const top = ranked.filter((r) => r.s > -99).slice(0, 2);
-      if (!top.length) {
-        console.warn(`  ⚠ no relevant pixabay result for "${ev.photo}" — placeholder`);
-        continue;
-      }
-      const hit = top[hashOf(content.id + ev.photo) % top.length].h;
-      const img = await fetch(hit.webformatURL);
-      writeFileSync(`public/${file}`, Buffer.from(await img.arrayBuffer()));
-      console.log(`  photo ${i}: "${ev.photo}" → pixabay #${hit.id} (score ${ranked[0].s}, ${hits.length} hits)`);
     }
     ev.photoFile = file;
   }
