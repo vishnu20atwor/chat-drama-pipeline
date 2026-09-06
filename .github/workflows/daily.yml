@@ -49,6 +49,8 @@ jobs:
         env:
           SHEET_ID: ${{ secrets.SHEET_ID }}
           BG_URL: ${{ secrets.BG_URL }}
+          ELEVENLABS_KEY_1: ${{ secrets.ELEVENLABS_KEY_1 }}
+          ELEVENLABS_KEY_2: ${{ secrets.ELEVENLABS_KEY_2 }}
         run: node scripts/build.mjs ${{ steps.d.outputs.date }}
 
       - name: Upload to YouTube

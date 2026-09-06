@@ -12,16 +12,23 @@ word-level boundaries are a bonus edge-tts gives for free and the renderer
 uses them to light up words as they're spoken.
 
 Engines, chosen per voice in content/voices.json:
+  eleven  ElevenLabs, used automatically whenever an ELEVENLABS_KEY_* is set and
+          the character has an "eleven" voice name. Two keys on the $5 plan give
+          60,000 characters a month against ~350 a video, so rotation is really
+          insurance rather than arithmetic.
   edge    (default) Microsoft neural voices via edge-tts. Free, no key, 400+ voices.
   kokoro  local open-weights model, needs `pip install kokoro soundfile`. Voice
           names are Kokoro's (af_heart, am_michael, ...). Word timings are
           spread evenly across the clip.
 """
 import asyncio
+import base64
 import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
 
 import edge_tts
 
@@ -46,6 +53,82 @@ async def speak_edge(text, cfg, out_path):
     return {"file": os.path.basename(out_path), "durationMs": end + TAIL_MS, "words": words}
 
 
+# --- ElevenLabs ---------------------------------------------------------------
+# Keys are ELEVENLABS_KEY_1, _2, ... A key that is rate limited or out of quota
+# (429, or 401 with a quota message) is retired for the rest of the run and the
+# next one takes over. When they are all spent we fall back to edge-tts rather
+# than fail: a day of flatter voices beats a day with no video.
+API = "https://api.elevenlabs.io/v1"
+MODEL = "eleven_multilingual_v2"
+
+
+def eleven_keys():
+    keys = [v for k, v in sorted(os.environ.items()) if k.startswith("ELEVENLABS_KEY_") and v.strip()]
+    return keys
+
+
+def _get(path, key):
+    req = urllib.request.Request(f"{API}{path}", headers={"xi-api-key": key})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.load(r)
+
+
+def eleven_voice_ids(key):
+    """name -> voice_id for whatever this account can actually see."""
+    if not hasattr(eleven_voice_ids, "cache"):
+        eleven_voice_ids.cache = {}
+    if key not in eleven_voice_ids.cache:
+        try:
+            data = _get("/voices", key)
+            eleven_voice_ids.cache[key] = {v["name"]: v["voice_id"] for v in data.get("voices", [])}
+            print(f"  elevenlabs voices available: {', '.join(sorted(eleven_voice_ids.cache[key]))}")
+        except Exception as e:
+            print(f"  ! could not list elevenlabs voices: {e}")
+            eleven_voice_ids.cache[key] = {}
+    return eleven_voice_ids.cache[key]
+
+
+def speak_eleven(text, cfg, out_path, keys):
+    """Returns a clip dict, or None if every key is spent or the voice is unknown."""
+    while keys:
+        key = keys[0]
+        vid = eleven_voice_ids(key).get(cfg["eleven"])
+        if not vid:
+            print(f'  ! no elevenlabs voice named "{cfg["eleven"]}" - falling back to edge')
+            return None
+        body = json.dumps({
+            "text": text,
+            "model_id": cfg.get("model", MODEL),
+            # with-timestamps hands back the exact clip length, so we never have
+            # to shell out to ffprobe to find out how long a line took.
+            "voice_settings": {"stability": cfg.get("stability", 0.4), "similarity_boost": cfg.get("similarity", 0.75), "style": cfg.get("style", 0.35), "use_speaker_boost": True},
+        }).encode()
+        req = urllib.request.Request(
+            f"{API}/text-to-speech/{vid}/with-timestamps",
+            data=body,
+            headers={"xi-api-key": key, "content-type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = json.load(r)
+        except urllib.error.HTTPError as e:
+            spent = e.code == 429 or (e.code == 401 and b"quota" in (e.read() or b"").lower())
+            if spent:
+                print(f"  key {len(keys)} spent (HTTP {e.code}) - rotating")
+                keys.pop(0)
+                continue
+            print(f"  ! elevenlabs HTTP {e.code} - falling back to edge")
+            return None
+        except Exception as e:
+            print(f"  ! elevenlabs failed ({e}) - falling back to edge")
+            return None
+        with open(out_path, "wb") as f:
+            f.write(base64.b64decode(data["audio_base64"]))
+        ends = data.get("alignment", {}).get("character_end_times_seconds") or [0.8]
+        return {"file": os.path.basename(out_path), "durationMs": int(ends[-1] * 1000) + TAIL_MS, "words": []}
+    return None
+
+
 def speak_kokoro(text, cfg, out_path):
     # ponytail: lazy import so the default install stays torch-free.
     import soundfile as sf
@@ -65,7 +148,11 @@ def speak_kokoro(text, cfg, out_path):
     return {"file": os.path.basename(out_path), "durationMs": ms + TAIL_MS, "words": words}
 
 
-async def speak(text, cfg, out_path):
+async def speak(text, cfg, out_path, keys=None):
+    if keys and cfg.get("eleven"):
+        clip = speak_eleven(text, cfg, out_path, keys)
+        if clip:
+            return clip
     if cfg.get("engine", "edge") == "kokoro":
         return speak_kokoro(text, cfg, out_path)
     # edge-tts occasionally returns no audio for a perfectly good line — a
@@ -89,6 +176,8 @@ async def main(content_path):
     with open(os.path.join(root, "content", "voices.json"), encoding="utf-8") as f:
         voices = json.load(f)
     cast = {**voices, **content.get("cast", {})}
+    keys = eleven_keys()
+    print(f"  voices: elevenlabs ({len(keys)} key{'s' if len(keys) != 1 else ''})" if keys else "  voices: edge-tts (no ELEVENLABS_KEY_* set)")
 
     events = []
     total = 0
@@ -102,13 +191,13 @@ async def main(content_path):
             # a photo, or an emoji-only bubble: a beat of silence, no clip
             clip = {"file": None, "durationMs": 900, "words": []}
         else:
-            clip = await speak(say, cast[ev["who"]], out)
+            clip = await speak(say, cast[ev["who"]], out, keys)
         events.append(clip)
         total += clip["durationMs"]
         print(f'  {i:2} {ev["who"]:<9} {clip["durationMs"] / 1000:4.1f}s  {ev["text"][:56]}')
         i += 1
 
-    cta = await speak(content.get("ctaSay") or "Follow for part two.", cast[NARRATOR], os.path.join(vo_dir, "cta.mp3"))
+    cta = await speak(content.get("ctaSay") or "Follow for part two.", cast[NARRATOR], os.path.join(vo_dir, "cta.mp3"), keys)
     total += cta["durationMs"]
 
     audio_path = os.path.join(root, "content", f'{content["id"]}.audio.json')

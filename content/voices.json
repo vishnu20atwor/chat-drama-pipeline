@@ -1,22 +1,144 @@
 {
-  "Me":       {"voice": "en-US-AvaMultilingualNeural",   "rate": "+16%", "pitch": "+0Hz", "emoji": "🙂", "pool": false},
-  "Mom":      {"voice": "en-US-JennyNeural",             "rate": "+12%", "pitch": "+0Hz", "emoji": "👩"},
-  "Dad":      {"voice": "en-US-GuyNeural",               "rate": "+10%", "pitch": "-6Hz", "emoji": "👨"},
-  "Grandma":  {"voice": "en-GB-SoniaNeural",             "rate": "+2%",  "pitch": "-4Hz", "emoji": "👵"},
-  "Grandpa":  {"voice": "en-GB-ThomasNeural",            "rate": "+0%",  "pitch": "-8Hz", "emoji": "👴"},
-  "Sis":      {"voice": "en-US-EmmaMultilingualNeural",  "rate": "+18%", "pitch": "+4Hz", "emoji": "👧"},
-  "Bro":      {"voice": "en-US-BrianMultilingualNeural", "rate": "+16%", "pitch": "+2Hz", "emoji": "👦"},
-  "Kid":      {"voice": "en-US-AnaNeural",               "rate": "+12%", "pitch": "+0Hz", "emoji": "🧒"},
-  "Bestie":   {"voice": "en-US-AriaNeural",              "rate": "+18%", "pitch": "+2Hz", "emoji": "💁"},
-  "Teacher":  {"voice": "en-US-MichelleNeural",          "rate": "+8%",  "pitch": "-2Hz", "emoji": "📚"},
-  "Coach":    {"voice": "en-US-ChristopherNeural",       "rate": "+10%", "pitch": "-4Hz", "emoji": "🧢"},
-  "Boss":     {"voice": "en-US-ChristopherNeural",       "rate": "+8%",  "pitch": "-4Hz", "emoji": "👔"},
-  "Neighbor": {"voice": "en-US-RogerNeural",             "rate": "+10%", "pitch": "-2Hz", "emoji": "🏠"},
-  "Unknown":  {"voice": "en-US-SteffanNeural",           "rate": "+8%",  "pitch": "-2Hz", "emoji": "❓"},
-  "Stranger": {"voice": "en-US-EricNeural",              "rate": "+10%", "pitch": "+0Hz", "emoji": "❓"},
-  "Landlord": {"voice": "en-US-EricNeural",              "rate": "+8%",  "pitch": "-6Hz", "emoji": "🔑"},
-  "Uncle":    {"voice": "en-US-RogerNeural",             "rate": "+12%", "pitch": "-4Hz", "emoji": "🧔"},
-  "Aunt":     {"voice": "en-US-MichelleNeural",          "rate": "+12%", "pitch": "+2Hz", "emoji": "👩‍🦱"},
-  "Roommate": {"voice": "en-US-BrianMultilingualNeural", "rate": "+14%", "pitch": "-2Hz", "emoji": "🛋️"},
-  "Narrator": {"voice": "en-US-AndrewMultilingualNeural","rate": "+12%", "pitch": "+0Hz", "emoji": "🎙️", "pool": false}
+  "Me": {
+    "voice": "en-US-AvaMultilingualNeural",
+    "rate": "+16%",
+    "pitch": "+0Hz",
+    "emoji": "🙂",
+    "pool": false,
+    "eleven": "Jessica"
+  },
+  "Mom": {
+    "voice": "en-US-JennyNeural",
+    "rate": "+12%",
+    "pitch": "+0Hz",
+    "emoji": "👩",
+    "eleven": "Sarah"
+  },
+  "Dad": {
+    "voice": "en-US-GuyNeural",
+    "rate": "+10%",
+    "pitch": "-6Hz",
+    "emoji": "👨",
+    "eleven": "Brian"
+  },
+  "Grandma": {
+    "voice": "en-GB-SoniaNeural",
+    "rate": "+2%",
+    "pitch": "-4Hz",
+    "emoji": "👵",
+    "eleven": "Alice"
+  },
+  "Grandpa": {
+    "voice": "en-GB-ThomasNeural",
+    "rate": "+0%",
+    "pitch": "-8Hz",
+    "emoji": "👴",
+    "eleven": "George"
+  },
+  "Sis": {
+    "voice": "en-US-EmmaMultilingualNeural",
+    "rate": "+18%",
+    "pitch": "+4Hz",
+    "emoji": "👧",
+    "eleven": "Lily"
+  },
+  "Bro": {
+    "voice": "en-US-BrianMultilingualNeural",
+    "rate": "+16%",
+    "pitch": "+2Hz",
+    "emoji": "👦",
+    "eleven": "Liam"
+  },
+  "Kid": {
+    "voice": "en-US-AnaNeural",
+    "rate": "+12%",
+    "pitch": "+0Hz",
+    "emoji": "🧒",
+    "eleven": "Lily"
+  },
+  "Bestie": {
+    "voice": "en-US-AriaNeural",
+    "rate": "+18%",
+    "pitch": "+2Hz",
+    "emoji": "💁",
+    "eleven": "Laura"
+  },
+  "Teacher": {
+    "voice": "en-US-MichelleNeural",
+    "rate": "+8%",
+    "pitch": "-2Hz",
+    "emoji": "📚",
+    "eleven": "Charlotte"
+  },
+  "Coach": {
+    "voice": "en-US-ChristopherNeural",
+    "rate": "+10%",
+    "pitch": "-4Hz",
+    "emoji": "🧢",
+    "eleven": "Chris"
+  },
+  "Boss": {
+    "voice": "en-US-ChristopherNeural",
+    "rate": "+8%",
+    "pitch": "-4Hz",
+    "emoji": "👔",
+    "eleven": "Daniel"
+  },
+  "Neighbor": {
+    "voice": "en-US-RogerNeural",
+    "rate": "+10%",
+    "pitch": "-2Hz",
+    "emoji": "🏠",
+    "eleven": "Eric"
+  },
+  "Unknown": {
+    "voice": "en-US-SteffanNeural",
+    "rate": "+8%",
+    "pitch": "-2Hz",
+    "emoji": "❓",
+    "eleven": "Will"
+  },
+  "Stranger": {
+    "voice": "en-US-EricNeural",
+    "rate": "+10%",
+    "pitch": "+0Hz",
+    "emoji": "❓",
+    "eleven": "Callum"
+  },
+  "Landlord": {
+    "voice": "en-US-EricNeural",
+    "rate": "+8%",
+    "pitch": "-6Hz",
+    "emoji": "🔑",
+    "eleven": "Bill"
+  },
+  "Uncle": {
+    "voice": "en-US-RogerNeural",
+    "rate": "+12%",
+    "pitch": "-4Hz",
+    "emoji": "🧔",
+    "eleven": "Chris"
+  },
+  "Aunt": {
+    "voice": "en-US-MichelleNeural",
+    "rate": "+12%",
+    "pitch": "+2Hz",
+    "emoji": "👩‍🦱",
+    "eleven": "Matilda"
+  },
+  "Roommate": {
+    "voice": "en-US-BrianMultilingualNeural",
+    "rate": "+14%",
+    "pitch": "-2Hz",
+    "emoji": "🛋️",
+    "eleven": "Will"
+  },
+  "Narrator": {
+    "voice": "en-US-AndrewMultilingualNeural",
+    "rate": "+12%",
+    "pitch": "+0Hz",
+    "emoji": "🎙️",
+    "pool": false,
+    "eleven": "Daniel"
+  }
 }
