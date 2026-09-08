@@ -1,0 +1,26 @@
+name: check the token
+
+# Verify YT_REFRESH_TOKEN on its own: no render, no upload, nothing left on the
+# channel to clean up afterwards. Run it after re-minting the token, or any day
+# the daily run's first step says the token is dead.
+#
+# token-check.mjs needs nothing but Node's built-in fetch, so there is no
+# npm ci here and the whole thing finishes in about fifteen seconds.
+on:
+  workflow_dispatch:
+
+jobs:
+  token:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check the YouTube token
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: node scripts/token-check.mjs
