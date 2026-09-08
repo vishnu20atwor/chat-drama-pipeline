@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate the three sound effects. No dependencies, no downloads.
+"""Generate the message tone. No dependencies, no downloads.
 
     python scripts/sfx.py public/sfx
 
@@ -51,46 +51,9 @@ def pop():
     return out
 
 
-def boom():
-    out = []
-    n = int(RATE * 0.9)
-    ph = 0.0
-    rnd = random.Random(7)
-    for i in range(n):
-        t = i / RATE
-        f = 48 + 90 * math.exp(-t * 12)  # pitch drops into the sub
-        ph += 2 * math.pi * f / RATE
-        sub = math.sin(ph) * math.exp(-t * 3.2)
-        click = (rnd.random() * 2 - 1) * math.exp(-t * 60) * 0.5
-        out.append(0.9 * sub + click)
-    return out
-
-
-def riser():
-    # 2.2s of tension: filtered noise swelling in, plus a tone climbing an
-    # octave. Ends exactly where the boom starts.
-    out = []
-    n = int(RATE * 2.2)
-    rnd = random.Random(3)
-    ph = 0.0
-    lp = 0.0
-    for i in range(n):
-        t = i / RATE
-        p = t / 2.2
-        f = 110 * (2 ** p)
-        ph += 2 * math.pi * f / RATE
-        # one-pole lowpass on noise, opening up as it rises
-        lp += (rnd.random() * 2 - 1 - lp) * (0.02 + 0.3 * p)
-        env = p ** 2.2
-        out.append((0.55 * lp + 0.25 * math.sin(ph)) * env)
-    return out
-
-
 def main(d):
     os.makedirs(d, exist_ok=True)
     write(os.path.join(d, "pop.wav"), pop())
-    write(os.path.join(d, "boom.wav"), boom())
-    write(os.path.join(d, "riser.wav"), riser())
 
 
 if __name__ == "__main__":

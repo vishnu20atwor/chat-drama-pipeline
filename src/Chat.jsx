@@ -3,7 +3,7 @@ import {AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, spring, stat
 import {loadFont} from '@remotion/google-fonts/Inter';
 import {measureText} from '@remotion/layout-utils';
 import {FPS, H, SAFE_BOTTOM, SKINS, W, clockOf, hashOf, pickSkin} from './theme.js';
-import {RISER_MS, TAIL, f, timeline} from './timeline.js';
+import {TAIL, timeline} from './timeline.js';
 
 const {fontFamily} = loadFont('normal', {weights: ['400', '500', '600', '700', '800'], subsets: ['latin']});
 // Emoji fall through to the platform colour font: Segoe on Windows, Noto on
@@ -328,7 +328,12 @@ export const Chat = ({content, audio}) => {
       {/* --- audio --- */}
       {!content.cover && (
         <>
-          <Audio src={staticFile(`music/${content.mood || 'sad'}.wav`)} volume={0.11} loop />
+          {/* No music bed, no riser, no bass drop. A viewer on the first video
+              with real reach wrote "chat gpt made it, i know from the music
+              background and the sounds" — and he was right: every one of those
+              was synthesised from sine waves here. A real screen recording has
+              a message tone and nothing else, so that is all this plays now.
+              The [boom] still lands visually: punch-in, flash and shake. */}
           {tl.items
             .filter((it) => it.kind === 'msg')
             .map((it) => (
@@ -336,17 +341,6 @@ export const Chat = ({content, audio}) => {
                 <Sequence from={it.from} durationInFrames={20}>
                   <Audio src={staticFile('sfx/pop.wav')} volume={0.7} />
                 </Sequence>
-                {it.boom && (
-                  <>
-                    {/* the riser's loud end must land on the boom, so an early boom trims its start, not its end */}
-                    <Sequence from={it.riserFrom} durationInFrames={it.from - it.riserFrom + 2}>
-                      <Audio src={staticFile('sfx/riser.wav')} volume={0.8} startFrom={Math.max(0, f(RISER_MS) - (it.from - it.riserFrom))} />
-                    </Sequence>
-                    <Sequence from={it.from} durationInFrames={30}>
-                      <Audio src={staticFile('sfx/boom.wav')} volume={0.9} />
-                    </Sequence>
-                  </>
-                )}
                 {it.file && (
                   <Sequence from={it.from} durationInFrames={Math.ceil((it.durationMs / 1000) * fps) + 6}>
                     <Audio src={staticFile(`vo/${content.id}/${it.file}`)} />
