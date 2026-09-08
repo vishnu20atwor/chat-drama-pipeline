@@ -80,8 +80,17 @@ def eleven_voice_ids(key):
     if key not in eleven_voice_ids.cache:
         try:
             data = _get("/voices", key)
-            eleven_voice_ids.cache[key] = {v["name"]: v["voice_id"] for v in data.get("voices", [])}
-            print(f"  elevenlabs voices available: {', '.join(sorted(eleven_voice_ids.cache[key]))}")
+            # ElevenLabs labels its stock voices "Alice - Clear, Engaging
+            # Educator", not "Alice". Exact matching missed every single one
+            # and silently fell back to edge, so nothing ever used ElevenLabs.
+            # Key on both the bare name and the full label.
+            ids = {}
+            for v in data.get("voices", []):
+                full = v["name"]
+                ids[full] = v["voice_id"]
+                ids.setdefault(full.split(" - ")[0].strip(), v["voice_id"])
+            eleven_voice_ids.cache[key] = ids
+            print(f"  elevenlabs voices resolved: {len(eleven_voice_ids.cache[key])} names")
         except Exception as e:
             print(f"  ! could not list elevenlabs voices: {e}")
             eleven_voice_ids.cache[key] = {}
