@@ -23,6 +23,22 @@ if (process.argv.includes('--self')) {
   const bad = check({date: '2026-01-01', title: 't', script: 'Unknown: send me your nudes\nMe: no'});
   assert(bad.errors.some((e) => e.includes('off-brand')), 'banned themes are caught');
   assert(bad.errors.some((e) => e.includes('under 10')), 'thin stories are caught');
+  // A dead refresh token is the one failure that stops the channel, so the
+  // message has to say what to do about it. Stubbed fetch, no network.
+  const {accessToken} = await import('./lib/google.mjs');
+  const realFetch = globalThis.fetch;
+  const saved = {i: process.env.YT_CLIENT_ID, s: process.env.YT_CLIENT_SECRET, r: process.env.YT_REFRESH_TOKEN};
+  process.env.YT_CLIENT_ID = process.env.YT_CLIENT_SECRET = process.env.YT_REFRESH_TOKEN = 'self-check';
+  globalThis.fetch = async () => ({ok: false, text: async () => '{"error":"invalid_grant"}'});
+  let msg = '';
+  await accessToken().catch((e) => (msg = e.message));
+  globalThis.fetch = realFetch;
+  for (const [k, v] of [['YT_CLIENT_ID', saved.i], ['YT_CLIENT_SECRET', saved.s], ['YT_REFRESH_TOKEN', saved.r]]) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  assert(/oauthplayground/.test(msg) && /YT_REFRESH_TOKEN/.test(msg), `invalid_grant must say how to fix it, got: "${msg}"`);
+
   console.log('self-check ok');
   process.exit(0);
 }

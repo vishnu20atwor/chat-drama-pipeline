@@ -33,6 +33,18 @@ jobs:
         id: d
         run: echo "date=${{ inputs.date || '' }}" >> "$GITHUB_OUTPUT"
 
+      # The token is otherwise only exercised at the very end, after the whole
+      # render. Five seconds here turns "expired token" from a surprise at the
+      # upload step into the first thing in the log. Non-fatal on purpose: the
+      # render still runs, so there is a file to post by hand.
+      - name: Check the YouTube token
+        continue-on-error: true
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: node scripts/token-check.mjs
+
       - run: npm ci
       - run: pip install edge-tts
 
@@ -81,4 +93,7 @@ jobs:
             out/*.cover.jpg
             out/*.post.txt
             out/*.meta.json
-          retention-days: 14
+          # 5, not 14. Each artifact is ~33MB, so 14 days held ~460MB against
+          # the 500MB free allowance and would have started failing on its own.
+          # The video is on YouTube by this point; this is only a safety copy.
+          retention-days: 5
