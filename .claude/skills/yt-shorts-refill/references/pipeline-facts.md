@@ -83,11 +83,22 @@ olive oil joke all trip it. Rewrite, don't argue with the regex.
 
 ## Cast (`content/voices.json`) — use these exact names as speakers
 
-`Me · Mom · Dad · Grandma · Grandpa · Sis · Bro · Kid · Bestie · Teacher ·
+`Me · MeM · Mom · Dad · Grandma · Grandpa · Sis · Bro · Kid · Bestie · Teacher ·
 Coach · Boss · Neighbor · Unknown · Stranger · Landlord · Uncle · Aunt ·
-Roommate · Narrator`
+Roommate`
 
-`Me` and `Narrator` are excluded from the fallback pool. Names are case- and
+**The POV's voice.** `Me` is a young woman (ElevenLabs Jessica). When the POV
+is male anywhere in the row — a line ("son", "grandson", "good lad"), the title,
+the CTA, the description — use `MeM` (Will, a young man) as the speaker **and**
+set the `pov` column to `MeM`. Outgoing bubbles never show a name, so nothing
+changes on screen.
+
+**Voices must match the text.** Every `eleven` voice is an adult; there are no
+child voices in the premade set. Teacher is a man (Mr. Reyes). All voices are
+American, so write American English. No two speakers in one story may share a
+voice — check `content/voices.json` when you put an unusual pair together.
+
+`Me` and `MeM` are excluded from the fallback pool. Names are case- and
 spelling-exact: `Bestie` works; `bestie` and `Best Friend` get a fallback voice
 and a warning. A speaker name may be up to 21 characters, matching
 `[A-Za-z][\w .'-]*`.
@@ -110,9 +121,11 @@ in the same commit — never ship a story that relies on a fallback.
 `[typing 5]` and `[typing 3]` render identically. When you want more dread,
 stack `[seen]` + `[pause 1.5]` — don't reach for a bigger number.
 
-**`[boom]` needs runway.** The 2.2s riser starts 2.2s *before* the boom bubble
-and plays over whatever sits there. Put at least 2s of `[seen]` / `[pause]` /
-`[typing]` immediately before it, or the riser swallows the preceding dialogue.
+**`[boom]` renders nothing.** It marks the reveal for the linter. There is no
+riser, flash, shake or sound on it any more.
+
+**`[typing]` only works before an incoming bubble.** Before a `Me`/`MeM` line it
+is silently dropped — use `[pause]` for the POV hesitating.
 
 The hook bubble is drawn at frame 0 with no typing dots — frame 0 is what the
 feed shows before anyone taps.
@@ -172,22 +185,24 @@ at 8 PM on a runner nobody is watching.
 | `part` | none; set it only for multi-part cliffhangers |
 | `cta` | "Follow for tomorrow's story" |
 
-## Music and mood
+## Sound
 
-There is no `mood` column. `content/channel.json` maps each **series** to one of
-three generated beds — `sad`, `light`, `tense` — and build.mjs renders only the
-bed that day needs. A new series must be added to `channel.json.moods` or it
-falls back to `defaultMood`.
+The voices, and nothing else. No music, no message tone, no effects — every one
+of those was synthesised in code, and a viewer heard it. The question card is
+silent; the `cta` is read, not narrated.
 
 ## Voices
 
 `content/voices.json` carries both engines per character: an edge-tts `voice`
-and an ElevenLabs `eleven` name. With `ELEVENLABS_KEY_*` set, ElevenLabs is used
-and unresolvable names fall back to edge with a warning. Adding a character
-means adding both.
+and an ElevenLabs `eleven` name. With `ELEVENLABS_KEY_*` set, ElevenLabs is used;
+each bubble is sent with its neighbours as `previous_text`/`next_text` so it is
+voiced as a reply. A dead key or an unresolvable name falls back to edge and
+prints a `::warning::` on the run summary. Adding a character means adding both.
 
 ## What no longer exists
 
 `[photo:]`, Pixabay, `PIXABAY_KEY`, the image bubble, word-level karaoke
-timings, and the yellow headline band. Do not write photo beats — the grammar
-rejects them, and the linter will fail the whole batch.
+timings, the yellow headline band, the music beds and `mood`, the riser and
+bass drop, the message tone, the `[boom]` punch-in/flash/shake, the progress
+bar, "Active now", and the Narrator. Do not write photo beats — a `[photo: …]`
+line would be shown and read aloud as literal text.

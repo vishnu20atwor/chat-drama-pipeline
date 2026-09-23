@@ -16,7 +16,6 @@ export const CTA_PAD_MS = 450;
 export const TAIL = 14; // the loop-back: the last half second crossfades to the opening frame
 export const TYPING_MAX_MS = 2500; // authored [typing 3] is capped — past 2.5s the dots stop being tension and start being a reason to swipe
 export const PAUSE_MAX_MS = 1800;
-export const RISER_MS = 2200; // sfx/riser.wav length; it ends on the boom
 
 export const timeline = (content, audio) => {
   let t = 0;
@@ -35,10 +34,7 @@ export const timeline = (content, audio) => {
       const hold = speak + f(GAP_MS);
       const extra = ev.react ? f(REACT_MS) : 0;
       t += hold + extra;
-      // The riser runs up to the boom bubble, over whatever precedes it (the
-      // typing dots, a [seen], a [pause]) — that dead air is what it's for.
-      const riserFrom = ev.boom ? Math.max(0, from - f(RISER_MS)) : undefined;
-      return {...ev, i, typingFrom, typing, from, speak, frames: hold + extra, until: t, words: a.words || [], durationMs: a.durationMs, file: a.file, riserFrom};
+      return {...ev, i, typingFrom, typing, from, speak, frames: hold + extra, until: t, words: a.words || [], durationMs: a.durationMs, file: a.file};
     }
     const ms = ev.kind === 'seen' ? SEEN_MS : ev.kind === 'pause' ? Math.min(ev.ms, PAUSE_MAX_MS) : TIME_MS;
     const from = t;

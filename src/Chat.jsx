@@ -14,7 +14,6 @@ const FONT = `${fontFamily}, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color 
 const STATUS_H = 64;
 const HEADER_Y = STATUS_H;
 const HEADER_H = 128;
-const PROGRESS_H = 8;
 // The gameplay band. The thread sits above it; this is the half of the screen
 // that used to be empty black. With no background clip the band is 0 and the
 // thread takes the whole frame, so a missing asset costs nothing.
@@ -91,17 +90,18 @@ const StatusBar = ({skin, clock}) => (
 
 const Header = ({skin, content, group}) => {
   const who = content.cast[content.contact] || {emoji: group ? '👥' : '👤'};
-  const sub = group ? `${Object.keys(content.cast).filter((n) => n !== content.pov).join(', ')}` : 'Active now';
+  // iMessage shows no presence. "Active now" and a green dot are Messenger's,
+  // and on a story about texting a dead dad's number they said he was online.
+  const sub = group ? Object.keys(content.cast).filter((n) => n !== content.pov).join(', ') : '';
   return (
     <div style={{position: 'absolute', top: HEADER_Y, left: 0, width: W, height: HEADER_H, background: skin.header, borderBottom: `2px solid ${skin.line}`, display: 'flex', alignItems: 'center', padding: `0 ${PAD_X}px`, fontFamily: FONT}}>
       <span style={{color: skin.outBg, fontSize: 44, fontWeight: 600, marginRight: 22}}>‹</span>
-      <div style={{width: 88, height: 88, borderRadius: 44, background: skin.inBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 50, marginRight: 22, position: 'relative'}}>
+      <div style={{width: 88, height: 88, borderRadius: 44, background: skin.inBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 50, marginRight: 22}}>
         <span>{who.emoji || '👤'}</span>
-        {!group && <span style={{position: 'absolute', right: 2, bottom: 2, width: 22, height: 22, borderRadius: 11, background: skin.online, border: `4px solid ${skin.header}`}} />}
       </div>
       <div style={{flex: 1, minWidth: 0}}>
         <div style={{color: skin.text, fontSize: 38, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{content.contact}</div>
-        <div style={{color: skin.sub, fontSize: 26, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{sub}</div>
+        {sub && <div style={{color: skin.sub, fontSize: 26, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{sub}</div>}
       </div>
       {content.part ? (
         <div style={{background: skin.headlineBg, color: skin.headline, fontSize: 26, fontWeight: 800, padding: '8px 18px', borderRadius: 999, marginLeft: 12}}>PART {content.part}</div>
@@ -109,14 +109,6 @@ const Header = ({skin, content, group}) => {
     </div>
   );
 };
-
-// A thin bar under the headline that fills over the video. "It's short, stay"
-// — the cheapest completion-rate lever there is.
-const Progress = ({skin, frame, total}) => (
-  <div style={{position: 'absolute', top: 0, left: 0, width: W, height: PROGRESS_H, background: skin.line}}>
-    <div style={{width: `${Math.min(100, (100 * frame) / total)}%`, height: '100%', background: skin.headlineBg}} />
-  </div>
-);
 
 // Licensed gameplay under the thread. objectFit crops a 16:9 clip into the
 // band, and startFrom walks a different window of the loop each day so the
@@ -220,21 +212,15 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
   const cardBottom = cardTop + phoneH * cardScale;
   const offset = total - chatH;
 
-  // The twist beat: punch-in, a flash, and a shake on a [boom] bubble.
-  const boom = tl.items.find((it) => it.boom && frame >= it.from && frame < it.from + 10);
-  const bp = boom ? 1 - ease(frame, boom.from, 10) : 0;
-  const punch = 1 + 0.05 * bp;
-  const flash = boom ? 0.16 * (1 - ease(frame, boom.from, 4)) : 0;
-  const shakeX = boom ? Math.sin(frame * 7.3) * 9 * bp : 0;
-  const shakeY = boom ? Math.cos(frame * 5.1) * 6 * bp : 0;
-
+  // [boom] draws nothing. The punch-in, white flash and shake it used to do
+  // were the picture's half of the deleted bass drop — no phone moves like that.
   const cta = frame >= tl.ctaFrom;
   const ctaS = cta ? spring({frame: frame - tl.ctaFrom, fps, config: {damping: 14, stiffness: 150}}) : 0;
 
   return (
     <AbsoluteFill style={{background: '#000', fontFamily: FONT}}>
       <Gameplay bg={content.bg} />
-      <AbsoluteFill style={{transform: `translate(${shakeX}px, ${shakeY}px) scale(${punch})`, transformOrigin: '50% 45%'}}>
+      <AbsoluteFill>
         {/* the screenshot: the whole phone, clipped, sitting over the gameplay */}
         <div style={{position: 'absolute', top: cardTop, left: content.bg ? CARD_M : 0, width: W, height: phoneH, transform: `scale(${cardScale})`, transformOrigin: 'top left', overflow: 'hidden', background: skin.bg, borderRadius: content.bg ? CARD_R / cardScale : 0, boxShadow: content.bg ? '0 22px 60px rgba(0,0,0,0.6)' : 'none'}}>
         {skin.pattern && (
@@ -242,7 +228,6 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
         )}
         <StatusBar skin={skin} clock={clock} />
         <Header skin={skin} content={content} group={group} />
-        <Progress skin={skin} frame={frame} total={tl.ctaFrom} />
 
         <div style={{position: 'absolute', top: CHAT_Y, left: 0, width: W, height: chatH, overflow: 'hidden'}}>
           <div style={{position: 'absolute', left: PAD_X, right: PAD_X, top: 0, transform: `translateY(${-offset}px)`}}>
@@ -276,8 +261,6 @@ const Screen = ({content, tl, heights, group, inSpeakers, skin, frame}) => {
           </div>
         ) : null}
       </AbsoluteFill>
-
-      {flash > 0 && <AbsoluteFill style={{background: '#fff', opacity: flash}} />}
 
       {cta && !content.cover && (
         <AbsoluteFill style={{background: `rgba(0,0,0,${0.78 * Math.min(1, ctaS * 1.5)})`, backdropFilter: `blur(${16 * Math.min(1, ctaS * 1.5)}px)`, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
@@ -328,25 +311,18 @@ export const Chat = ({content, audio}) => {
       {/* --- audio --- */}
       {!content.cover && (
         <>
-          {/* No music bed, no riser, no bass drop. A viewer on the first video
-              with real reach wrote "chat gpt made it, i know from the music
-              background and the sounds" — and he was right: every one of those
-              was synthesised from sine waves here. A real screen recording has
-              a message tone and nothing else, so that is all this plays now.
-              The [boom] still lands visually: punch-in, flash and shake. */}
+          {/* Voices and nothing else. A viewer on the first video with real
+              reach wrote "chat gpt made it, i know from the music background
+              and the sounds", and every one of those sounds was synthesised
+              from sine waves here — the music, the riser, the bass drop, and
+              last of all the message tone, which was the same generated bell
+              on every bubble. No audio made in code, ever. */}
           {tl.items
-            .filter((it) => it.kind === 'msg')
+            .filter((it) => it.kind === 'msg' && it.file)
             .map((it) => (
-              <React.Fragment key={it.i}>
-                <Sequence from={it.from} durationInFrames={20}>
-                  <Audio src={staticFile('sfx/pop.wav')} volume={0.7} />
-                </Sequence>
-                {it.file && (
-                  <Sequence from={it.from} durationInFrames={Math.ceil((it.durationMs / 1000) * fps) + 6}>
-                    <Audio src={staticFile(`vo/${content.id}/${it.file}`)} />
-                  </Sequence>
-                )}
-              </React.Fragment>
+              <Sequence key={it.i} from={it.from} durationInFrames={Math.ceil((it.durationMs / 1000) * fps) + 6}>
+                <Audio src={staticFile(`vo/${content.id}/${it.file}`)} />
+              </Sequence>
             ))}
           {audio.cta?.file && (
             <Sequence from={tl.ctaFrom} durationInFrames={tl.ctaFrames}>

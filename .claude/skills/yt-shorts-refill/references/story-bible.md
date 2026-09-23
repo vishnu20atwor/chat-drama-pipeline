@@ -182,7 +182,7 @@ Caps and exact durations are in `pipeline-facts.md`. Intent:
 [pause 1.5]     dead air, the dread beat
 [time ...]      "2 hours later", "Next morning", "3 missed calls later"
 [react ❤️]      after a bubble that earned it; 😂 🔥 😭 also work
-[boom]          the reveal bubble, once per story — needs 2s of dead air before it
+[boom]          marks the reveal bubble, once per story — it renders nothing
 ```
 
 ## Titles — tell them what to feel

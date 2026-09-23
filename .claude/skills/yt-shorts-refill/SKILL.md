@@ -87,9 +87,13 @@ channel wins on **rewatches, comments and follows**, not on polish.
 - The last bubble lands in ≤ 8 words. The CTA is a question a viewer answers in
   the comments, not "like and subscribe".
 - The title tells the viewer what to feel, in plain words. See the bible.
-- At least one `[boom]`, or `[seen]` + `[pause]`, around the reveal — with 2s of
-  dead air in front of a `[boom]` so the riser has runway.
+- At least one `[boom]`, or `[seen]` + `[pause]`, around the reveal.
 - Every character sounds like a person. Mom capitalises. Kids don't.
+- The voice matches who the text says is talking. `Me` is a young woman's
+  voice; if the story makes the POV male anywhere — a line, the title, the
+  CTA, the description — write him as `MeM` and set `pov` to `MeM`.
+- American English. The voices are American and so is the audience: mom, not
+  mum; parking lot, not car park; call, not ring.
 - Nothing sexual, ever. Everything else — dark, creepy, revenge, grief — is in,
   if it is decent.
 

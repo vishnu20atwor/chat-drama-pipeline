@@ -2,8 +2,6 @@ node_modules/
 out/
 # generated on every run, in CI too
 public/vo/
-public/sfx/
-public/music/
 public/photos/
 # the gameplay loop: 167MB, fetched from BG_URL at build time
 public/bg/

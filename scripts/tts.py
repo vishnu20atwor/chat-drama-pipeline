@@ -7,9 +7,8 @@ Writes public/vo/<id>/<n>.mp3 (one per message) and content/<id>.audio.json:
 {"events": [{"file", "durationMs", "words": [{"w","t","d"}]}, ...], "cta": {...}}
 
 Each message is its own clip, so any engine that can speak a sentence into a
-file can play a character. The timings only need the clip length; the
-word-level boundaries are a bonus edge-tts gives for free and the renderer
-uses them to light up words as they're spoken.
+file can play a character. The timings only need the clip length. The
+question card at the end is not voiced: "cta" carries only its hold time.
 
 Engines, chosen per voice in content/voices.json:
   eleven  ElevenLabs, used automatically whenever an ELEVENLABS_KEY_* is set and
@@ -33,7 +32,7 @@ import urllib.request
 import edge_tts
 
 TAIL_MS = 220        # beat of silence after the last word of a clip
-NARRATOR = "Narrator"
+CTA_MS = 2000        # how long the silent question card holds
 
 
 async def speak_edge(text, cfg, out_path):
@@ -97,21 +96,35 @@ def eleven_voice_ids(key):
     return eleven_voice_ids.cache[key]
 
 
-def speak_eleven(text, cfg, out_path, keys):
+def speak_eleven(text, cfg, out_path, keys, prev="", nxt=""):
     """Returns a clip dict, or None if every key is spent or the voice is unknown."""
     while keys:
         key = keys[0]
-        vid = eleven_voice_ids(key).get(cfg["eleven"])
+        ids = eleven_voice_ids(key)
+        if not ids:
+            # A key that cannot even list voices is revoked or invalid. Without
+            # this the next key was never tried and every line went to edge.
+            print(f"::warning::an ElevenLabs key could not list voices; {len(keys) - 1} key(s) left")
+            keys.pop(0)
+            continue
+        vid = ids.get(cfg["eleven"])
         if not vid:
             print(f'  ! no elevenlabs voice named "{cfg["eleven"]}" - falling back to edge')
             return None
-        body = json.dumps({
+        req_body = {
             "text": text,
             "model_id": cfg.get("model", MODEL),
             # with-timestamps hands back the exact clip length, so we never have
             # to shell out to ffprobe to find out how long a line took.
             "voice_settings": {"stability": cfg.get("stability", 0.4), "similarity_boost": cfg.get("similarity", 0.75), "style": cfg.get("style", 0.35), "use_speaker_boost": True},
-        }).encode()
+        }
+        # The lines either side, so a bubble is voiced as a reply in a
+        # conversation instead of a sentence read cold. Not spoken, only heard.
+        if prev:
+            req_body["previous_text"] = prev
+        if nxt:
+            req_body["next_text"] = nxt
+        body = json.dumps(req_body).encode()
         req = urllib.request.Request(
             f"{API}/text-to-speech/{vid}/with-timestamps",
             data=body,
@@ -121,12 +134,14 @@ def speak_eleven(text, cfg, out_path, keys):
             with urllib.request.urlopen(req, timeout=120) as r:
                 data = json.load(r)
         except urllib.error.HTTPError as e:
-            spent = e.code == 429 or (e.code == 401 and b"quota" in (e.read() or b"").lower())
+            detail = e.read() or b""
+            spent = e.code == 429 or (e.code == 401 and b"quota" in detail.lower())
             if spent:
-                print(f"  key {len(keys)} spent (HTTP {e.code}) - rotating")
+                # ::warning:: puts it on the run's summary page, not just the log.
+                print(f"::warning::an ElevenLabs key is out of quota or rate limited (HTTP {e.code}); {len(keys) - 1} key(s) left")
                 keys.pop(0)
                 continue
-            print(f"  ! elevenlabs HTTP {e.code} - falling back to edge")
+            print(f"  ! elevenlabs HTTP {e.code} - falling back to edge: {detail[:300]!r}")
             return None
         except Exception as e:
             print(f"  ! elevenlabs failed ({e}) - falling back to edge")
@@ -157,11 +172,14 @@ def speak_kokoro(text, cfg, out_path):
     return {"file": os.path.basename(out_path), "durationMs": ms + TAIL_MS, "words": words}
 
 
-async def speak(text, cfg, out_path, keys=None):
+async def speak(text, cfg, out_path, keys=None, prev="", nxt=""):
     if keys and cfg.get("eleven"):
-        clip = speak_eleven(text, cfg, out_path, keys)
+        clip = speak_eleven(text, cfg, out_path, keys, prev, nxt)
         if clip:
             return clip
+        # Loud on purpose: a quiet fallback once hid a dead ElevenLabs for days
+        # behind green runs and good-looking videos.
+        print(f'::warning::ElevenLabs failed for "{cfg["eleven"]}"; this line is edge-tts')
     if cfg.get("engine", "edge") == "kokoro":
         return speak_kokoro(text, cfg, out_path)
     # edge-tts occasionally returns no audio for a perfectly good line — a
@@ -188,26 +206,26 @@ async def main(content_path):
     keys = eleven_keys()
     print(f"  voices: elevenlabs ({len(keys)} key{'s' if len(keys) != 1 else ''})" if keys else "  voices: edge-tts (no ELEVENLABS_KEY_* set)")
 
+    msgs = [ev for ev in content["events"] if ev["kind"] == "msg"]
+    says = [ev.get("say", "") for ev in msgs]  # sheet.mjs already expanded shorthand and dropped emoji
     events = []
     total = 0
-    i = 0
-    for ev in content["events"]:
-        if ev["kind"] != "msg":
-            continue
+    for i, (ev, say) in enumerate(zip(msgs, says)):
         out = os.path.join(vo_dir, f"{i}.mp3")
-        say = ev.get("say", "")  # sheet.mjs already expanded shorthand and dropped emoji
         if not say.strip() or not re.search(r"[A-Za-z0-9]", say):
-            # a photo, or an emoji-only bubble: a beat of silence, no clip
+            # an emoji-only bubble: a beat of silence, no clip
             clip = {"file": None, "durationMs": 900, "words": []}
         else:
-            clip = await speak(say, cast[ev["who"]], out, keys)
+            prev = says[i - 1] if i else ""
+            nxt = says[i + 1] if i + 1 < len(says) else ""
+            clip = await speak(say, cast[ev["who"]], out, keys, prev, nxt)
         events.append(clip)
         total += clip["durationMs"]
         print(f'  {i:2} {ev["who"]:<9} {clip["durationMs"] / 1000:4.1f}s  {ev["text"][:56]}')
-        i += 1
 
-    cta = await speak(content.get("ctaSay") or "Follow for part two.", cast[NARRATOR], os.path.join(vo_dir, "cta.mp3"), keys)
-    total += cta["durationMs"]
+    # The question card is read, not narrated. The narrator was a third voice
+    # nobody in the chat owns — a newsreader asking the audience a question.
+    cta = {"file": None, "durationMs": CTA_MS, "words": []}
 
     audio_path = os.path.join(root, "content", f'{content["id"]}.audio.json')
     with open(audio_path, "w", encoding="utf-8") as f:

@@ -1,5 +1,5 @@
 // One command per video:  npm run build -- 2026-09-06
-// Sheet → lint → voices → sounds → render → cover → copy. Writes out/<id>.*
+// Sheet → lint → voices → render → cover → copy. Writes out/<id>.*
 import {execSync} from 'node:child_process';
 import {existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {hashOf} from '../src/theme.js';
@@ -21,9 +21,6 @@ console.log(`\nsheet → content/${id}.json`);
 run('node', ['scripts/sheet.mjs', id]);
 const content = JSON.parse(readFileSync(`content/${id}.json`, 'utf8'));
 const channel = JSON.parse(readFileSync('content/channel.json', 'utf8'));
-
-// Generated once, reused forever (gitignored, so CI makes them on every run — ~10s).
-if (!existsSync('public/sfx/riser.wav')) run('python', ['scripts/sfx.py', 'public/sfx']);
 
 console.log(`\nvoicing ${id}`);
 run('python', ['scripts/tts.py', `content/${id}.json`]);
@@ -55,17 +52,23 @@ if (!existsSync(BG) && process.env.BG_URL) {
     rmSync(BG, {force: true});
   }
 }
+// ffprobe writes to stderr, not stdout. Capturing only stdout left secs at 0,
+// which collapsed every day's window to 0s — the same footage every time.
+// A clip it cannot read (a truncated download) exits non-zero: no gameplay then.
+let secs = 0;
 if (existsSync(BG)) {
-  // ffprobe writes to stderr, not stdout. Capturing only stdout left secs at 0,
-  // which collapsed every day's window to 0s — the same footage every time.
-  const probe = execSync(`npx remotion ffprobe ${BG} 2>&1`, {encoding: 'utf8'});
-  const m = probe.match(/Duration: (\d+):(\d+):(\d+)/);
-  const secs = m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : 0;
-  const room = Math.max(1, secs - MAX_S - 5); // never run off the end of the clip
+  try {
+    const m = execSync(`npx remotion ffprobe ${BG} 2>&1`, {encoding: 'utf8'}).match(/Duration: (\d+):(\d+):(\d+)/);
+    if (m) secs = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+  } catch {}
+  if (secs <= MAX_S + 5) console.log('::warning::gameplay clip unreadable or too short; rendering without it');
+}
+if (secs > MAX_S + 5) {
+  const room = secs - MAX_S - 5; // never run off the end of the clip
   const startSec = hashOf(id + 'bg') % room;
   content.bg = {file: 'bg/loop.mp4', startFrom: startSec * 30};
   console.log(`gameplay: ${secs}s clip, window from ${startSec}s`);
-} else {
+} else if (!existsSync(BG)) {
   console.log('no gameplay clip (public/bg/loop.mp4) — full-frame thread');
 }
 
@@ -79,7 +82,19 @@ mkdirSync('out', {recursive: true});
 writeFileSync(`out/${id}.props.json`, JSON.stringify({content, audio}));
 
 console.log(`\nrendering ${id}  (${seconds.toFixed(1)}s)`);
-run('npx', ['remotion', 'render', 'src/index.jsx', 'Chat', `out/${id}.raw.mp4`, `--props=out/${id}.props.json`, '--log=error']);
+const render = () => run('npx', ['remotion', 'render', 'src/index.jsx', 'Chat', `out/${id}.raw.mp4`, `--props=out/${id}.props.json`, '--log=error']);
+try {
+  render();
+} catch (e) {
+  if (!content.bg) throw e;
+  // The gameplay decoder fails now and then ("No frame found at position",
+  // seen locally on a stretch CI had rendered fine). A plainer video beats no
+  // video: drop the clip and render the full-frame thread.
+  console.log('::warning::render with gameplay failed; rendering without it');
+  delete content.bg;
+  writeFileSync(`out/${id}.props.json`, JSON.stringify({content, audio}));
+  render();
+}
 
 // Loudness. Every edge-tts voice comes out at its own level, and a Short that
 // plays quieter than the one before it gets swiped. Normalise the mix to the
@@ -92,7 +107,12 @@ rmSync(`out/${id}.raw.mp4`);
 const hook = tl.items.find((it) => it.kind === 'msg');
 const coverFrame = (hook ? hook.from : 0) + 22;
 writeFileSync(`out/${id}.cover.props.json`, JSON.stringify({content: {...content, cover: true}, audio}));
-run('npx', ['remotion', 'still', 'src/index.jsx', 'Chat', `out/${id}.cover.jpg`, `--frame=${coverFrame}`, `--props=out/${id}.cover.props.json`, '--log=error']);
+// Nothing uploads the cover (Shorts use a video frame), so it never fails the run.
+try {
+  run('npx', ['remotion', 'still', 'src/index.jsx', 'Chat', `out/${id}.cover.jpg`, `--frame=${coverFrame}`, `--props=out/${id}.cover.props.json`, '--log=error']);
+} catch {
+  console.log('::warning::cover still failed; the video is unaffected');
+}
 
 // The copy. Composed once here; upload.mjs and deliver.mjs only read it.
 const hashtags = content.hashtags.map((h) => (h.startsWith('#') ? h : `#${h}`));

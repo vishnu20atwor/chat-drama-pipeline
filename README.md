@@ -2,11 +2,12 @@
 
 Daily text-message drama Shorts, rendered and uploaded unattended.
 
-A story is a text conversation. Each character has its own free neural voice
-(edge-tts), bubbles land in an iMessage-style phone, words light up as they're
-spoken, and a twist beat hits with a bass drop. One row in the sheet = one
-video. A GitHub Actions cron renders today's row at 20:00 UTC and uploads it
-public with the row's title, description and hashtags.
+A story is a text conversation. Each character has its own voice (ElevenLabs,
+falling back to edge-tts), and bubbles appear in an iMessage-style phone over
+gameplay. The voices are the only sound: no music, no tones, nothing generated
+in code. One row in the sheet = one video. A GitHub Actions cron renders
+today's row at 20:00 UTC and uploads it public with the row's title,
+description and hashtags.
 
 ```
 sheet/stories.csv ──sheet.mjs──▶ content/<date>.json ──tts.py──▶ public/vo/<date>/*.mp3
@@ -24,7 +25,8 @@ node scripts/frames.mjs 2026-09-05   # 2fps frames in out/frames/ for review
 npm run studio                   # Remotion Studio with content/sample.json
 ```
 
-Optional `.env` with `PIXABAY_KEY=...` turns `[photo: ...]` bubbles into real images.
+Optional `.env` with `ELEVENLABS_KEY_1=...` uses ElevenLabs locally; without it
+every voice is edge-tts.
 
 ## The sheet
 
@@ -34,12 +36,12 @@ Optional `.env` with `PIXABAY_KEY=...` turns `[photo: ...]` bubbles into real im
 |---|---|
 | `date` | YYYY-MM-DD, the day it posts |
 | `series`, `part` | the show name (shown under the phone) and episode number for multi-part cliffhangers |
-| `title` | the yellow headline — it is the thumbnail |
-| `pov` | the character on the right side (default `Me`) |
+| `title` | the YouTube title (not drawn in the video) |
+| `pov` | the character on the right side (default `Me`; `MeM` for a male POV) |
 | `contact` | the name in the chat header (default: first incoming speaker) |
 | `skin` | `dark` (default), `light`, `green`, or `auto` |
 | `script` | the conversation, one line per beat — grammar below |
-| `cta` | the end-card question, narrated |
+| `cta` | the end-card question, shown silently |
 | `description`, `hashtags`, `pinned` | YouTube copy; `#Shorts` is appended |
 
 ### Script grammar
@@ -52,9 +54,11 @@ Me: which jacket                           the pov side, right-aligned, blue
 [pause 2]         dead air
 [time 2 hours later]   separator line
 [react ❤️]        tapback on the previous bubble
-[boom]            the next bubble hits with bass + punch-in
-Mom: [photo: gold ring in a box]    image bubble from Pixabay
+[boom]            marks the reveal bubble (renders nothing; the linter reads it)
 ```
+
+A male POV writes `MeM:` instead of `Me:` and sets `pov` to `MeM` — same right
+side, a young man's voice.
 
 `node scripts/lint.mjs` checks every row; `node scripts/refill.mjs batch.json`
 appends a batch (and refuses the whole batch if any row fails). The
@@ -65,8 +69,7 @@ appends a batch (and refuses the whole batch if any row fails). The
 ```
 scripts/
   sheet.mjs      row → content/<date>.json (parse + lint)
-  tts.py         one clip per bubble, per-character voice, word timings
-  sfx.py bed.py  generated sounds and music (no downloads)
+  tts.py         one clip per bubble, per-character voice
   build.mjs      the whole thing; writes out/<date>.{mp4,cover.jpg,meta.json,post.txt}
   upload.mjs     YouTube Data API v3, public, raw REST
   deliver.mjs    optional Telegram delivery

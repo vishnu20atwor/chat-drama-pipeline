@@ -7,7 +7,7 @@
 //   [pause 2]         2s of nothing — the dread beat
 //   [time 2 hours later]   a centered separator line
 //   [react ❤️]        a tapback on the previous bubble
-//   [boom]            the next bubble lands with a bass hit and a punch-in
+//   [boom]            marks the reveal bubble; draws and plays nothing
 //
 // This file turns that text into events, and refuses the ones that would make
 // a bad video. sheet.mjs, refill.mjs and lint.mjs all go through here.
@@ -154,7 +154,6 @@ export const check = (row) => {
     // show can still have its sad episode. Blank means "whatever the series is".
     mood: row.mood || '',
     cta: row.cta || 'Follow for tomorrow’s story 👀',
-    ctaSay: spoken(row.cta || 'Follow for tomorrow’s story'),
     description: row.description || '',
     hashtags: (row.hashtags || '').split(/[ ,]+/).filter(Boolean),
     pinned: row.pinned || '',

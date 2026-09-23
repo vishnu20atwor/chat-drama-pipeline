@@ -7,6 +7,14 @@
     "pool": false,
     "eleven": "Jessica"
   },
+  "MeM": {
+    "voice": "en-US-AndrewMultilingualNeural",
+    "rate": "+16%",
+    "pitch": "+0Hz",
+    "emoji": "🙂",
+    "pool": false,
+    "eleven": "Will"
+  },
   "Mom": {
     "voice": "en-US-JennyNeural",
     "rate": "+12%",
@@ -22,25 +30,25 @@
     "eleven": "Brian"
   },
   "Grandma": {
-    "voice": "en-GB-SoniaNeural",
+    "voice": "en-US-MichelleNeural",
     "rate": "+2%",
     "pitch": "-4Hz",
     "emoji": "👵",
-    "eleven": "Alice"
+    "eleven": "Matilda"
   },
   "Grandpa": {
-    "voice": "en-GB-ThomasNeural",
+    "voice": "en-US-RogerNeural",
     "rate": "+0%",
     "pitch": "-8Hz",
     "emoji": "👴",
-    "eleven": "George"
+    "eleven": "Bill"
   },
   "Sis": {
     "voice": "en-US-EmmaMultilingualNeural",
     "rate": "+18%",
     "pitch": "+4Hz",
     "emoji": "👧",
-    "eleven": "Lily"
+    "eleven": "Laura"
   },
   "Bro": {
     "voice": "en-US-BrianMultilingualNeural",
@@ -64,11 +72,11 @@
     "eleven": "Laura"
   },
   "Teacher": {
-    "voice": "en-US-MichelleNeural",
+    "voice": "en-US-ChristopherNeural",
     "rate": "+8%",
     "pitch": "-2Hz",
     "emoji": "📚",
-    "eleven": "Bella"
+    "eleven": "Chris"
   },
   "Coach": {
     "voice": "en-US-ChristopherNeural",
@@ -96,7 +104,7 @@
     "rate": "+8%",
     "pitch": "-2Hz",
     "emoji": "❓",
-    "eleven": "Will"
+    "eleven": "Adam"
   },
   "Stranger": {
     "voice": "en-US-EricNeural",
@@ -131,14 +139,6 @@
     "rate": "+14%",
     "pitch": "-2Hz",
     "emoji": "🛋️",
-    "eleven": "Will"
-  },
-  "Narrator": {
-    "voice": "en-US-AndrewMultilingualNeural",
-    "rate": "+12%",
-    "pitch": "+0Hz",
-    "emoji": "🎙️",
-    "pool": false,
-    "eleven": "Daniel"
+    "eleven": "Liam"
   }
 }
