@@ -23,6 +23,8 @@ if (process.argv.includes('--self')) {
   const bad = check({date: '2026-01-01', title: 't', script: 'Unknown: send me your nudes\nMe: no'});
   assert(bad.errors.some((e) => e.includes('off-brand')), 'banned themes are caught');
   assert(bad.errors.some((e) => e.includes('under 10')), 'thin stories are caught');
+  const brit = check({date: '2026-01-01', title: 'My mom', script: 'Mom: the telly is on\nMe: ok'});
+  assert(brit.warnings.some((w) => w.includes('"telly"')) && !brit.warnings.some((w) => w.includes('"mom"')), 'British words are flagged, American ones are not');
   // A dead refresh token is the one failure that stops the channel, so the
   // message has to say what to do about it. Stubbed fetch, no network.
   const {accessToken} = await import('./lib/google.mjs');
@@ -44,6 +46,8 @@ if (process.argv.includes('--self')) {
 }
 
 const rows = parseCsv(readFileSync('sheet/stories.csv', 'utf8'));
+// A warning on a row that has already posted can't be acted on; errors still count.
+const today = new Date().toISOString().slice(0, 10);
 let bad = 0;
 const seen = new Set();
 for (const r of rows) {
@@ -53,7 +57,7 @@ for (const r of rows) {
   if (errors.length) {
     bad++;
     console.error(`✗ ${r.date}  ${r.title}\n${errors.map((e) => `    ${e}`).join('\n')}`);
-  } else if (warnings.length) console.warn(`⚠ ${r.date}  ${r.title}  (${words}w)\n${warnings.map((w) => `    ${w}`).join('\n')}`);
+  } else if (warnings.length && r.date >= today) console.warn(`⚠ ${r.date}  ${r.title}  (${words}w)\n${warnings.map((w) => `    ${w}`).join('\n')}`);
 }
 console.log(`${rows.length} stories, ${bad} rejected, last date ${rows.map((r) => r.date).sort().at(-1)}`);
 if (bad) process.exit(1);

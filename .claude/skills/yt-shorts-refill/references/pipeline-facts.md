@@ -46,6 +46,8 @@ already in the sheet.
 | 95+ spoken words (`wordsWarn`) | ~50s+; trim the middle |
 | speaker not in `content/voices.json` | a deterministic fallback voice is used — add the name to voices.json instead |
 | no `[boom]`, `[seen]` or `[pause]` | the twist has no beat around it |
+| `British "mum"` (or telly, flatmate, grandad, "was sat", …) | rewrite in American English |
+| `[typing] before your own bubble does nothing` | cut it, or use `[pause]` |
 | two consecutive days share a `series` | interleave, unless it's a `part` > 1 |
 
 ## How the word count is actually computed
@@ -94,7 +96,10 @@ set the `pov` column to `MeM`. Outgoing bubbles never show a name, so nothing
 changes on screen.
 
 **Voices must match the text.** Every `eleven` voice is an adult; there are no
-child voices in the premade set. Teacher is a man (Mr. Reyes). All voices are
+child voices in the premade set, so `Kid` has no `eleven` on purpose and always
+uses edge's `AnaNeural`, a child's voice. Any sibling under ~13 is `Kid`, not
+`Bro`/`Sis` (in a 1:1 chat the speaker name never shows; set `contact` to what
+the phone would say). Teacher is a man (Mr. Reyes). All voices are
 American, so write American English. No two speakers in one story may share a
 voice — check `content/voices.json` when you put an unusual pair together.
 

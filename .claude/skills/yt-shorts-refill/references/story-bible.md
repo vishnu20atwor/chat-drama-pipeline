@@ -250,3 +250,8 @@ nephew's birthday, and it is funnier than it was the first time.
 - Bubble one reads identically before and after the twist — the loop is wasted.
 - The CTA has one obvious answer.
 - Two stories in the batch share a premise or a twist type — one per 30 days.
+- It ends on a `[react]` and so does either of the two stories before it. A
+  tapback closing every video was a template a regular viewer could see: at
+  most one story in three gets one.
+- Any word an American wouldn't text: mum, telly, flatmate, grandad, "was sat".
+  The voices and the audience are American.

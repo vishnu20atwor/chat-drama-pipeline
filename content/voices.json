@@ -61,8 +61,7 @@
     "voice": "en-US-AnaNeural",
     "rate": "+12%",
     "pitch": "+0Hz",
-    "emoji": "🧒",
-    "eleven": "Lily"
+    "emoji": "🧒"
   },
   "Bestie": {
     "voice": "en-US-AriaNeural",

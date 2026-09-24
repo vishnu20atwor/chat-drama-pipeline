@@ -93,7 +93,9 @@ channel wins on **rewatches, comments and follows**, not on polish.
   voice; if the story makes the POV male anywhere — a line, the title, the
   CTA, the description — write him as `MeM` and set `pov` to `MeM`.
 - American English. The voices are American and so is the audience: mom, not
-  mum; parking lot, not car park; call, not ring.
+  mum; parking lot, not car park; call, not ring. The linter warns on the
+  common ones.
+- A closing `[react]` on at most one story in three. It used to end all 59.
 - Nothing sexual, ever. Everything else — dark, creepy, revenge, grief — is in,
   if it is decent.
 

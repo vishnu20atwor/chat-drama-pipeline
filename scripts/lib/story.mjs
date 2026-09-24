@@ -32,6 +32,11 @@ export const LIMITS = {
 const BANNED =
   /\b(sleeping with|slept with|hook(ed)? up|nudes?|sext(ing)?|one night stand|strip(per|ping)|porn|horny|sexy|sex|virgin|condom|rape[ds]?)\b/i;
 
+// The voices and the audience are American. "mum" or "telly" in an American
+// voice is a person from nowhere — 28 of the first 59 stories had one.
+const BRITISH =
+  /\b(mum|mums|mummy|nan|grandad|flatmate|telly|quid|yoghurts?|allotment|wardrobe|car park|(?:was|been|is|are) sat|neighbour|humour|colour|favourite|rubbish|knackered|innit|bins are)\b/i;
+
 const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
 
 // script text → events
@@ -138,6 +143,11 @@ export const check = (row) => {
   const total = texts.reduce((a, m) => a + words(spoken(m.text)), 0) + words(row.cta || '');
   if (total > LIMITS.wordsFail) errors.push(`${total} spoken words — over ${LIMITS.wordsFail}, it will not fit in a Short`);
   else if (total > LIMITS.wordsWarn) warnings.push(`${total} spoken words — over ${LIMITS.wordsWarn}, a stranger may not finish it`);
+  if (msgs.some((m) => m.side === 'out' && m.typingMs)) warnings.push('[typing] before your own bubble does nothing — cut it, or use [pause]');
+  for (const t of [row.title, row.description, row.cta, row.pinned, row.contact, ...texts.map((m) => m.text)]) {
+    const m = (t || '').match(BRITISH);
+    if (m) warnings.push(`British "${m[0]}" in "${t.slice(0, 50)}" — write American English`);
+  }
   if (!msgs.some((m) => m.boom) && !events.some((e) => e.kind === 'seen' || e.kind === 'pause')) {
     warnings.push('no [boom], [seen] or [pause] — the twist has no beat around it');
   }
